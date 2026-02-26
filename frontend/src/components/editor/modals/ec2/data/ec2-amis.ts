@@ -1,0 +1,172 @@
+// src/components/editor/modals/ec2/data/ec2-amis.ts
+
+import type { AmiOption } from '../types/ec2-config';
+
+export const EC2_AMIS: AmiOption[] = [
+  {
+    id: 'ami-0c02fb55956c7d316',
+    name: 'Amazon Linux 2023 AMI',
+    description: 'Amazon Linux 2023 (HVM), SSD Volume Type',
+    platform: 'linux',
+    architecture: 'x86_64',
+    owner: '137112412989',
+    ownerAlias: 'amazon',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🟠',
+  },
+  {
+    id: 'ami-0c02fb55956c7d317',
+    name: 'Amazon Linux 2023 AMI (ARM)',
+    description: 'Amazon Linux 2023 (HVM), SSD Volume Type - ARM64',
+    platform: 'linux',
+    architecture: 'arm64',
+    owner: '137112412989',
+    ownerAlias: 'amazon',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🟠',
+  },
+  {
+    id: 'ami-0f5ee92e2d63afc18',
+    name: 'Ubuntu Server 24.04 LTS',
+    description: 'Canonical, Ubuntu, 24.04 LTS, amd64 noble image',
+    platform: 'linux',
+    architecture: 'x86_64',
+    owner: '099720109477',
+    ownerAlias: 'Canonical',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🟤',
+  },
+  {
+    id: 'ami-0f5ee92e2d63afc19',
+    name: 'Ubuntu Server 24.04 LTS (ARM)',
+    description: 'Canonical, Ubuntu, 24.04 LTS, arm64 noble image',
+    platform: 'linux',
+    architecture: 'arm64',
+    owner: '099720109477',
+    ownerAlias: 'Canonical',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🟤',
+  },
+  {
+    id: 'ami-0abcdef1234567890',
+    name: 'Ubuntu Server 22.04 LTS',
+    description: 'Canonical, Ubuntu, 22.04 LTS, amd64 jammy image',
+    platform: 'linux',
+    architecture: 'x86_64',
+    owner: '099720109477',
+    ownerAlias: 'Canonical',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🟤',
+  },
+  {
+    id: 'ami-0d5eff06f840b45e9',
+    name: 'Red Hat Enterprise Linux 9',
+    description: 'RHEL-9.3.0_HVM-20240117-x86_64',
+    platform: 'linux',
+    architecture: 'x86_64',
+    owner: '309956199498',
+    ownerAlias: 'Red Hat',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🔴',
+  },
+  {
+    id: 'ami-0d5eff06f840b45ea',
+    name: 'SUSE Linux Enterprise Server 15 SP5',
+    description: 'SLES-15-SP5-v20240115-hvm-ssd-x86_64',
+    platform: 'linux',
+    architecture: 'x86_64',
+    owner: '013907871322',
+    ownerAlias: 'SUSE',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🟢',
+  },
+  {
+    id: 'ami-0fc5d935ebf8bc3bc',
+    name: 'Microsoft Windows Server 2022 Base',
+    description: 'Microsoft Windows Server 2022 Full Locale English AMI',
+    platform: 'windows',
+    architecture: 'x86_64',
+    owner: '801119661308',
+    ownerAlias: 'amazon',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🔵',
+  },
+  {
+    id: 'ami-0fc5d935ebf8bc3bd',
+    name: 'Microsoft Windows Server 2019 Base',
+    description: 'Microsoft Windows Server 2019 Full Locale English AMI',
+    platform: 'windows',
+    architecture: 'x86_64',
+    owner: '801119661308',
+    ownerAlias: 'amazon',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🔵',
+  },
+  {
+    id: 'ami-0d4ae853acedc3dff',
+    name: 'Debian 12 (Bookworm)',
+    description: 'Debian 12 (HVM), SSD Volume Type',
+    platform: 'linux',
+    architecture: 'x86_64',
+    owner: '136693071363',
+    ownerAlias: 'Debian',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🟣',
+  },
+  {
+    id: 'ami-macOS14Sonoma001',
+    name: 'macOS Sonoma 14.x',
+    description: 'macOS Sonoma 14 - Apple Silicon (mac2 family)',
+    platform: 'macos',
+    architecture: 'arm64',
+    owner: '111122223333',
+    ownerAlias: 'amazon',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '⚪',
+  },
+  {
+    id: 'ami-amazonECS-optimized',
+    name: 'Amazon ECS-Optimized Amazon Linux 2023',
+    description: 'ECS-optimized AMI with Docker pre-installed',
+    platform: 'linux',
+    architecture: 'x86_64',
+    owner: '591542846629',
+    ownerAlias: 'amazon',
+    rootDeviceType: 'ebs',
+    virtualizationType: 'hvm',
+    icon: '🟠',
+  },
+];
+
+// Quick Launch AMIs — displayed at the top
+export const QUICK_LAUNCH_AMI_IDS = [
+  'ami-0c02fb55956c7d316', // Amazon Linux 2023
+  'ami-0f5ee92e2d63afc18', // Ubuntu 24.04
+  'ami-0fc5d935ebf8bc3bc', // Windows 2022
+  'ami-0d5eff06f840b45e9', // RHEL 9
+  'ami-macOS14Sonoma001',  // macOS
+];
+
+export const AMI_PLATFORM_FILTERS = [
+  { value: 'all', label: 'All platforms' },
+  { value: 'linux', label: 'Linux' },
+  { value: 'windows', label: 'Windows' },
+  { value: 'macos', label: 'macOS' },
+];
+
+export const AMI_ARCHITECTURE_FILTERS = [
+  { value: 'all', label: 'All architectures' },
+  { value: 'x86_64', label: '64-bit (x86)' },
+  { value: 'arm64', label: '64-bit (ARM)' },
+];

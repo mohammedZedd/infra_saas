@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@source "../src/**/*.{ts,tsx}";
+
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #FAFBFC;
+  color: #1E293B;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ─── Simulation Animations ─── */
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes packetMove {
+  0% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+
+@keyframes edgeGlow {
+  0% { stroke: #94A3B8; filter: none; }
+  50% { stroke: #4F6EF7; filter: drop-shadow(0 0 6px #4F6EF7); }
+  100% { stroke: #94A3B8; filter: none; }
+}
+
+@keyframes edgeGlowSuccess {
+  0% { stroke: #94A3B8; }
+  50% { stroke: #10B981; filter: drop-shadow(0 0 6px #10B981); }
+  100% { stroke: #94A3B8; }
+}
+
+@keyframes edgeGlowError {
+  0% { stroke: #94A3B8; }
+  50% { stroke: #EF4444; filter: drop-shadow(0 0 6px #EF4444); }
+  100% { stroke: #94A3B8; }
+}
+
+@keyframes nodeGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 110, 247, 0); }
+  50% { box-shadow: 0 0 0 8px rgba(79, 110, 247, 0.15); }
+}
+
+@keyframes nodeGlowSuccess {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.15); }
+}
+
+@keyframes nodeGlowError {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.15); }
+}
+
+@keyframes badgePop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes packetDot {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0.6; }
+}
+
+/* Apply glow to nodes during simulation */
+.simulation-node-active {
+  animation: nodeGlow 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.simulation-node-success {
+  animation: nodeGlowSuccess 1s ease-in-out;
+  border-radius: 8px;
+}
+
+.simulation-node-error {
+  animation: nodeGlowError 1s ease-in-out;
+  border-radius: 8px;
+}
+
+/* Edge animation during simulation */
+.react-flow__edge.simulation-edge-active path {
+  stroke: #4F6EF7 !important;
+  stroke-width: 3 !important;
+  animation: edgeGlow 1.5s ease-in-out infinite;
+}
+
+.react-flow__edge.simulation-edge-success path {
+  stroke: #10B981 !important;
+  stroke-width: 3 !important;
+  animation: edgeGlowSuccess 1s ease-in-out;
+}
+
+.react-flow__edge.simulation-edge-error path {
+  stroke: #EF4444 !important;
+  stroke-width: 3 !important;
+  animation: edgeGlowError 1s ease-in-out;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}

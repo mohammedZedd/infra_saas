@@ -8,7 +8,7 @@ interface Props {
   project: Project
 }
 
-export default function ProjectGit({ project }: Props) {
+export default function ProjectGit({ }: Props) {
   const repository = useGitStore((s) => s.repository)
   const commits = useGitStore((s) => s.commits)
   const branches = useGitStore((s) => s.branches)

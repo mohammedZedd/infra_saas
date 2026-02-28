@@ -2,82 +2,25 @@ import { Link } from "react-router-dom"
 
 export default function Navbar() {
   return (
-    <nav
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: "64px",
-        backgroundColor: "rgba(255,255,255,0.85)",
-        backdropFilter: "blur(12px)",
-        borderBottom: "1px solid #E5E7EB",
-        zIndex: 50,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "0 24px",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* Logo */}
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "8px",
-              background: "linear-gradient(135deg, #4F6EF7, #7C3AED)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <span style={{ color: "white", fontSize: "13px", fontWeight: 700 }}>ID</span>
-          </div>
-          <span style={{ fontSize: "17px", fontWeight: 600, color: "#111827" }}>InfraDesigner</span>
+    <nav className="sticky top-0 z-50 h-16 border-b border-gray-200/80 bg-white/80 backdrop-blur-md">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
+        <Link to="/" className="text-xl font-bold text-gray-900">
+          CloudForge
         </Link>
-
-        {/* Center links */}
-        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-          <a href="#features" style={{ fontSize: "14px", fontWeight: 500, color: "#6B7280", textDecoration: "none" }}>
+        <div className="hidden items-center gap-8 md:flex">
+          <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900">
             Features
           </a>
-          <Link to="/pricing" style={{ fontSize: "14px", fontWeight: 500, color: "#6B7280", textDecoration: "none" }}>
-            Pricing
-          </Link>
-          <a href="#docs" style={{ fontSize: "14px", fontWeight: 500, color: "#6B7280", textDecoration: "none" }}>
+          <a href="#docs" className="text-sm font-medium text-gray-600 hover:text-gray-900">
             Docs
           </a>
         </div>
-
-        {/* Right side */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Link
-            to="/login"
-            style={{ fontSize: "14px", fontWeight: 500, color: "#374151", textDecoration: "none", padding: "8px 16px" }}
-          >
+        <div className="flex items-center gap-2">
+          <Link to="/login" className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900">
             Sign in
           </Link>
-          <Link
-            to="/register"
-            style={{
-              fontSize: "14px",
-              fontWeight: 500,
-              color: "white",
-              backgroundColor: "#4F6EF7",
-              padding: "8px 18px",
-              borderRadius: "8px",
-              textDecoration: "none",
-            }}
-          >
-            Get Started →
+          <Link to="/register" className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+            Get started
           </Link>
         </div>
       </div>

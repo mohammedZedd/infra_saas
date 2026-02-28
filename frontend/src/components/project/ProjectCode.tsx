@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { highlightHCL, renderLineNumbers } from "./projectData"
 import type { Project } from "./projectData"
 import useGitStore from "../../stores/useGitStore"
 import GitConnectModal from "./GitConnectModal"
 import GitPushModal from "./GitPushModal"
+import { CodeEditor } from "../ui/CodeEditor"
 
 interface Props {
   project: Project
@@ -177,6 +177,14 @@ export default function ProjectCode({ project }: Props) {
     return "Text"
   }
 
+  const getLanguage = (fileName: string) => {
+    if (fileName.endsWith(".tf") || fileName.endsWith(".hcl") || fileName.endsWith(".tfvars")) return "hcl"
+    if (fileName.endsWith(".json")) return "json"
+    if (fileName.endsWith(".md")) return "markdown"
+    if (fileName.endsWith(".js") || fileName.endsWith(".ts")) return "javascript"
+    return "plaintext"
+  }
+
   const formatPushedAt = (iso: string) => {
     const diffMs = Date.now() - new Date(iso).getTime()
     const diffMins = Math.floor(diffMs / 60000)
@@ -250,17 +258,21 @@ export default function ProjectCode({ project }: Props) {
           <div style={{ padding: "6px 0" }}>{renderTree(fileTree)}</div>
         </div>
 
-        <div style={{ flex: 1, backgroundColor: "#0F172A", display: "flex", overflow: "auto" }}>
-          <pre style={{ margin: 0, padding: "16px 12px 16px 16px", fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace", fontSize: 13, lineHeight: 1.7, color: "#475569", textAlign: "right", userSelect: "none", borderRight: "1px solid #1E293B", minWidth: 40, flexShrink: 0, position: "sticky", left: 0, backgroundColor: "#0F172A" }}>
-            {renderLineNumbers(currentContent)}
-          </pre>
-          <pre
-            style={{ margin: 0, padding: "16px 20px", fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace", fontSize: 13, lineHeight: 1.7, color: "#E2E8F0", flex: 1, whiteSpace: "pre" }}
-            dangerouslySetInnerHTML={{
-              __html:
-                selectedFile.endsWith(".tf") || selectedFile.endsWith(".hcl") || selectedFile.endsWith(".tfvars")
-                  ? highlightHCL(currentContent)
-                  : currentContent.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"),
+        <div style={{ flex: 1, backgroundColor: "#1e1e1e", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <CodeEditor
+            value={currentContent}
+            language={getLanguage(selectedFile)}
+            theme="dark"
+            height="100%"
+            readOnly={true}
+            className="h-full w-full"
+            options={{
+              minimap: { enabled: false },
+              fontSize: 13,
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+              lineHeight: 22,
+              padding: { top: 16, bottom: 16 },
+              renderLineHighlight: "none",
             }}
           />
         </div>

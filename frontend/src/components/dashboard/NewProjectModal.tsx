@@ -21,7 +21,6 @@ export default function NewProjectModal({ isOpen, onClose }: NewProjectModalProp
 
     setLoading(true)
 
-    // TODO: call backend API to create project
     setTimeout(() => {
       setLoading(false)
       onClose()

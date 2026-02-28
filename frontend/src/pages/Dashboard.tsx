@@ -1,296 +1,99 @@
-// frontend/src/pages/Dashboard.tsx
-import { useNavigate } from 'react-router-dom';
-import DashboardSidebar from '../components/layout/DashboardSidebar';
+import { useNavigate } from "react-router-dom"
+import type { ElementType } from "react"
+import { DollarSign, FolderPlus, LayoutGrid, Plus, Server } from "lucide-react"
+import { AppLayout } from "../components/layout/AppLayout"
+import { EmptyState } from "../components/ui/EmptyState"
+import { Button } from "../components/ui/Button"
+import useProjectStore from "../stores/useProjectStore"
+import useUIStore from "../stores/useUIStore"
+import { formatCurrency, formatRelativeTime, truncate } from "../utils/format"
+import { getMockProjectStats } from "../data/mockProjects"
+import { cn } from "../utils/cn"
+import type { Project } from "../types/project.types"
 
-const MOCK_PROJECTS = [
-  {
-    id: '1',
-    name: 'Production VPC',
-    description: 'Main production infrastructure with EC2 and RDS',
-    components: 8,
-    updatedAt: '2 hours ago',
-    colors: ['#4F46E5', '#7C3AED', '#10B981', '#F59E0B'],
-  },
-  {
-    id: '2',
-    name: 'Serverless API',
-    description: 'Lambda + API Gateway + DynamoDB setup',
-    components: 5,
-    updatedAt: '1 day ago',
-    colors: ['#4F46E5', '#7C3AED', '#10B981', '#F59E0B'],
-  },
-  {
-    id: '3',
-    name: 'Static Website',
-    description: 'S3 + CloudFront distribution',
-    components: 3,
-    updatedAt: '3 days ago',
-    colors: ['#4F46E5', '#7C3AED', '#10B981'],
-  },
-];
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  deployed: "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20",
+  active: "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20",
+  deploying: "bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-600/20",
+  draft: "bg-gray-100 text-gray-700",
+  failed: "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20",
+}
+
+function StatCard({ icon: Icon, label, value }: { icon: ElementType; label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+        <Icon size={18} />
+      </div>
+      <p className="mt-4 text-sm font-medium text-gray-500">{label}</p>
+      <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
+    </div>
+  )
+}
+
+function ProjectCard({ project, onClick }: { project: Project; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white p-6 text-left shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
+    >
+      <h3 className="truncate text-base font-semibold text-gray-900">{project.name}</h3>
+      <p className="mt-1 line-clamp-2 text-sm text-gray-500">{truncate(project.description, 120)}</p>
+
+      <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4 text-sm text-gray-500">
+        <span>{project.node_count} resources</span>
+        <span>{formatCurrency(project.estimated_cost)}/mo</span>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+        <span
+          className={cn(
+            "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+            STATUS_BADGE_CLASS[project.status] ?? STATUS_BADGE_CLASS.draft
+          )}
+        >
+          {project.status}
+        </span>
+        <p className="text-xs text-gray-400">Updated {formatRelativeTime(project.updated_at)}</p>
+      </div>
+    </button>
+  )
+}
 
 export default function Dashboard() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const openModal = useUIStore((state) => state.openModal)
+  const projects = useProjectStore((state) => state.projects)
+
+  const stats = getMockProjectStats(projects)
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#F3F4F6',
-        display: 'flex',
-      }}
-    >
-      {/* Sidebar fixe pleine hauteur */}
-      <DashboardSidebar />
+    <AppLayout>
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">My Projects</h1>
+        <Button leftIcon={Plus} onClick={() => openModal("create-project")}>New Project</Button>
+      </div>
 
-      {/* Contenu principal — décalé de 240px */}
-      <main style={{ flex: 1, marginLeft: 240, minHeight: '100vh' }}>
-        {/* Top bar */}
-        <header
-          style={{
-            height: 64,
-            backgroundColor: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid #E5E7EB',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            padding: '0 32px',
-            position: 'sticky',
-            top: 0,
-            zIndex: 30,
-          }}
-        >
-          {/* Search bar */}
-          <div style={{ flex: 1, maxWidth: 400, marginRight: 'auto' }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '7px 14px',
-                backgroundColor: '#F9FAFB',
-                borderRadius: 8,
-                border: '1px solid #E5E7EB',
-              }}
-            >
-              <span style={{ fontSize: 14, color: '#9CA3AF' }}>🔍</span>
-              <input
-                type="text"
-                placeholder="Search projects..."
-                style={{
-                  border: 'none',
-                  outline: 'none',
-                  backgroundColor: 'transparent',
-                  fontSize: 13,
-                  color: '#374151',
-                  width: '100%',
-                }}
-              />
-            </div>
-          </div>
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <StatCard icon={LayoutGrid} label="Total Projects" value={String(stats.total_projects)} />
+        <StatCard icon={Server} label="Total Resources" value={String(stats.total_resources)} />
+        <StatCard icon={DollarSign} label="Est. Monthly Cost" value={formatCurrency(stats.total_estimated_cost)} />
+      </div>
 
-          {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* Notifications */}
-            <button
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 8,
-                border: '1px solid #E5E7EB',
-                backgroundColor: 'white',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 16,
-                position: 'relative',
-              }}
-            >
-              🔔
-              <span
-                style={{
-                  position: 'absolute',
-                  top: 6,
-                  right: 6,
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  backgroundColor: '#EF4444',
-                  border: '2px solid white',
-                }}
-              />
-            </button>
-
-            {/* Avatar */}
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #4F6EF7, #7C3AED)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <span style={{ color: 'white', fontSize: 14, fontWeight: 600 }}>J</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Page content */}
-        <div style={{ padding: '32px 40px 40px' }}>
-          {/* Page header */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 28,
-            }}
-          >
-            <div>
-              <h1 style={{ fontSize: 26, fontWeight: 700, color: '#111827', margin: 0 }}>
-                Projects
-              </h1>
-              <p style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>
-                {MOCK_PROJECTS.length} projects
-              </p>
-            </div>
-
-            <button
-              type="button"
-              style={{
-                padding: '10px 20px',
-                borderRadius: 10,
-                border: 'none',
-                backgroundColor: '#4F46E5',
-                color: '#FFFFFF',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(79,70,229,0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <span style={{ fontSize: 16 }}>+</span>
-              New Project
-            </button>
-          </div>
-
-          {/* Project grid */}
-          <section
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 20,
-            }}
-          >
-            {MOCK_PROJECTS.map((project) => (
-              <div
-                key={project.id}
-                onClick={() => navigate(`/project/${project.id}`)}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 14,
-                  border: '1px solid #E5E7EB',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'box-shadow 0.2s, border-color 0.2s, transform 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow =
-                    '0 8px 24px rgba(79,70,229,0.12)';
-                  e.currentTarget.style.borderColor = '#C7D2FE';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = '#E5E7EB';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                {/* Preview zone */}
-                <div
-                  style={{
-                    height: 130,
-                    background:
-                      'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 12,
-                  }}
-                >
-                  {/* Badge composants */}
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 10,
-                      right: 12,
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: '#6B7280',
-                      backgroundColor: 'rgba(255,255,255,0.85)',
-                      padding: '3px 8px',
-                      borderRadius: 6,
-                    }}
-                  >
-                    {project.components} components
-                  </span>
-
-                  {/* Color dots */}
-                  {project.colors.map((color, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        backgroundColor: color,
-                        opacity: 0.85,
-                      }}
-                    />
-                  ))}
-                </div>
-
-                {/* Info zone */}
-                <div style={{ padding: '16px 18px 18px' }}>
-                  <h3
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      color: '#111827',
-                      margin: '0 0 4px',
-                    }}
-                  >
-                    {project.name}
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: 12,
-                      color: '#6B7280',
-                      margin: '0 0 12px',
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {project.description}
-                  </p>
-                  <p style={{ fontSize: 11, color: '#9CA3AF', margin: 0 }}>
-                    🕐 {project.updatedAt}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </section>
-        </div>
-      </main>
-    </div>
-  );
+      {projects.length === 0 ? (
+        <EmptyState
+          icon={FolderPlus}
+          title="No projects yet"
+          description="Create your first project to start building AWS infrastructure visually."
+          action={{ label: "Create Project", onClick: () => openModal("create-project"), icon: Plus }}
+        />
+      ) : (
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {projects.map((project) => (
+            <ProjectCard key={project.id} project={project} onClick={() => navigate(`/projects/${project.id}`)} />
+          ))}
+        </section>
+      )}
+    </AppLayout>
+  )
 }

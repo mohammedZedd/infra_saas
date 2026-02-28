@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { cn } from "../../utils/cn"
 
 interface FeatureCardProps {
   icon: string
@@ -8,44 +8,13 @@ interface FeatureCardProps {
 }
 
 export default function FeatureCard({ icon, color, title, description }: FeatureCardProps) {
-  const [hovered, setHovered] = useState(false)
-
   return (
-    <div
-      style={{
-        padding: "28px",
-        backgroundColor: "white",
-        border: `1px solid ${hovered ? "#C7D2FE" : "#E5E7EB"}`,
-        borderRadius: "14px",
-        transition: "all 0.2s ease",
-        cursor: "default",
-        boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.06)" : "none",
-        transform: hovered ? "translateY(-2px)" : "translateY(0)",
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div
-        style={{
-          width: "44px",
-          height: "44px",
-          backgroundColor: color,
-          borderRadius: "10px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "20px",
-          marginBottom: "16px",
-        }}
-      >
+    <div className="rounded-2xl border border-transparent bg-gray-50 p-8 transition-all duration-300 hover:border-gray-200 hover:bg-white hover:shadow-lg">
+      <div className={cn("mb-5 flex h-12 w-12 items-center justify-center rounded-xl text-xl")} style={{ backgroundColor: color }}>
         {icon}
       </div>
-      <h3 style={{ fontSize: "17px", fontWeight: 600, color: "#111827", marginBottom: "8px" }}>
-        {title}
-      </h3>
-      <p style={{ fontSize: "14px", color: "#6B7280", lineHeight: 1.7 }}>
-        {description}
-      </p>
+      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <p className="mt-2 text-gray-600">{description}</p>
     </div>
   )
 }

@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom"
-import { ReactFlow, Background } from "@xyflow/react"
+import { ReactFlow, ReactFlowProvider, Background } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 
 import { RUN_STATUS_CONFIG } from "./projectData"
 import type { Project, TabId } from "./projectData"
-import { nodeTypes } from "../editor/nodes/nodeTypes"
+import { nodeTypes } from "../canvas/nodes/nodeTypes"
 import useEditorStore from "../../stores/useEditorStore"
 
 interface Props {
@@ -92,27 +92,29 @@ export default function ProjectOverview({ project, onTabChange }: Props) {
 
         <div style={{ flex: 1, minHeight: 420 }}>
           {previewNodes.length > 0 ? (
-            <ReactFlow
-              nodes={previewNodes}
-              edges={edges}
-              nodeTypes={nodeTypes}
-              fitView
-              fitViewOptions={{ padding: 0.3 }}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              nodesFocusable={false}
-              edgesFocusable={false}
-              elementsSelectable={false}
-              panOnDrag={false}
-              zoomOnScroll={false}
-              zoomOnPinch={false}
-              zoomOnDoubleClick={false}
-              preventScrolling={false}
-              proOptions={{ hideAttribution: true }}
-              style={{ backgroundColor: "#FAFBFC" }}
-            >
-              <Background color="#E2E8F0" gap={20} size={1} />
-            </ReactFlow>
+            <ReactFlowProvider>
+              <ReactFlow
+                nodes={previewNodes}
+                edges={edges}
+                nodeTypes={nodeTypes}
+                fitView
+                fitViewOptions={{ padding: 0.3 }}
+                nodesDraggable={false}
+                nodesConnectable={false}
+                nodesFocusable={false}
+                edgesFocusable={false}
+                elementsSelectable={false}
+                panOnDrag={false}
+                zoomOnScroll={false}
+                zoomOnPinch={false}
+                zoomOnDoubleClick={false}
+                preventScrolling={false}
+                proOptions={{ hideAttribution: true }}
+                style={{ backgroundColor: "#FAFBFC" }}
+              >
+                <Background color="#E2E8F0" gap={20} size={1} />
+              </ReactFlow>
+            </ReactFlowProvider>
           ) : (
             <div
               style={{

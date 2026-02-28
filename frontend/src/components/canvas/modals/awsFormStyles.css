@@ -1,0 +1,132 @@
+/* AWS-Style Form Elements */
+
+/* Input and Select focus states */
+.aws-form-input,
+.aws-form-select {
+  border-color: #D1D5DB;
+  transition: border-color 0.2s ease;
+}
+
+.aws-form-input:hover,
+.aws-form-select:hover {
+  border-color: #9CA3AF;
+}
+
+.aws-form-input:focus,
+.aws-form-select:focus {
+  outline: none;
+  border-color: #FF9900;
+  box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.1);
+}
+
+/* Error states */
+.aws-form-input.error,
+.aws-form-select.error {
+  border-color: #DC2626;
+}
+
+.aws-form-input.error:focus,
+.aws-form-select.error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* Buttons */
+.aws-button-primary {
+  background-color: #FF9900;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.aws-button-primary:hover {
+  background-color: #E68A00;
+}
+
+.aws-button-primary:active {
+  background-color: #CC7A00;
+}
+
+.aws-button-primary:disabled {
+  background-color: #D1D5DB;
+  cursor: not-allowed;
+}
+
+.aws-button-secondary {
+  background-color: #E5E7EB;
+  color: #1F2937;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 24px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.aws-button-secondary:hover {
+  background-color: #D1D5DB;
+}
+
+.aws-button-secondary:active {
+  background-color: #9CA3AF;
+}
+
+/* Checkboxes and Radio Buttons */
+.aws-checkbox,
+.aws-radio {
+  accent-color: #FF9900;
+  cursor: pointer;
+}
+
+/* Tags and Lists */
+.aws-tag-item {
+  background-color: #F3F4F6;
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #1F2937;
+}
+
+.aws-tag-item:hover {
+  background-color: #E5E7EB;
+}
+
+.aws-tag-remove {
+  color: #DC2626;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 12px;
+  transition: color 0.2s ease;
+}
+
+.aws-tag-remove:hover {
+  color: #B91C1C;
+}
+
+/* Textarea */
+.aws-form-textarea {
+  border-color: #D1D5DB;
+  transition: border-color 0.2s ease;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.aws-form-textarea:hover {
+  border-color: #9CA3AF;
+}
+
+.aws-form-textarea:focus {
+  outline: none;
+  border-color: #FF9900;
+  box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.1);
+}

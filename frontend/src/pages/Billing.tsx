@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { ArrowUpCircle, Check, CreditCard, Receipt } from "lucide-react"
 import toast from "react-hot-toast"
-import { AppLayout } from "../components/layout/AppLayout"
 import { Card, CardBody, CardHeader } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { Badge } from "../components/ui/Badge"
@@ -10,28 +9,25 @@ import useAuthStore from "../stores/useAuthStore"
 import { PLANS } from "../constants/pricing"
 import { formatCurrency, formatDate } from "../utils/format"
 import { cn } from "../utils/cn"
-
-const MOCK_INVOICES = [
-  { id: "inv-001", date: "2026-01-01", amount: 29, status: "paid", description: "Pro plan - January 2026" },
-  { id: "inv-002", date: "2025-12-01", amount: 29, status: "paid", description: "Pro plan - December 2025" },
-  { id: "inv-003", date: "2025-11-01", amount: 29, status: "paid", description: "Pro plan - November 2025" },
-]
+import { useEffect } from "react"
 
 const PLAN_ORDER = ["free", "pro", "team"] as const
 
 export default function Billing() {
   const user = useAuthStore((s) => s.user)
-  const setUser = useAuthStore((s) => s.setUser)
+  const [currentPlan, setCurrentPlan] = useState<string>(user?.plan ?? "free")
   const [confirmPlan, setConfirmPlan] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const currentPlan = user?.plan ?? "free"
+  useEffect(() => {
+    setCurrentPlan(user?.plan ?? "free")
+  }, [user?.plan])
 
   async function handleUpgrade() {
-    if (!confirmPlan || !user) return
+    if (!confirmPlan) return
     setLoading(true)
     await new Promise((r) => setTimeout(r, 800))
-    setUser({ ...user, plan: confirmPlan as typeof user.plan })
+    setCurrentPlan(confirmPlan)
     toast.success(`Switched to ${PLANS[confirmPlan as keyof typeof PLANS]?.name} plan`)
     setLoading(false)
     setConfirmPlan(null)
@@ -41,9 +37,16 @@ export default function Billing() {
   const targetPlan = confirmPlan ? PLANS[confirmPlan as keyof typeof PLANS] : null
 
   return (
-    <AppLayout>
+    <div className="p-6 lg:p-8">
       <div className="mx-auto max-w-3xl space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
+
+        <Card>
+          <CardBody>
+            <p className="text-sm font-medium text-gray-900">{user?.name ?? "Unknown user"}</p>
+            <p className="text-sm text-gray-500">{user?.email ?? "No email available"}</p>
+          </CardBody>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -112,35 +115,24 @@ export default function Billing() {
             </h2>
           </CardHeader>
           <CardBody className="p-0">
-            <ul>
-              {MOCK_INVOICES.map((inv, i) => (
-                <li key={inv.id} className={cn("flex items-center justify-between px-6 py-4 text-sm", i !== 0 && "border-t border-gray-100")}>
-                  <div>
-                    <p className="font-medium text-gray-800">{inv.description}</p>
-                    <p className="text-xs text-gray-400">{formatDate(inv.date)}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-semibold text-gray-700">{formatCurrency(inv.amount)}</span>
-                    <Badge variant="green" size="sm" dot>
-                      {inv.status}
-                    </Badge>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="px-6 py-8 text-center">
+              <p className="text-sm font-medium text-gray-700">No invoices yet</p>
+              <p className="mt-1 text-xs text-gray-500">Billing invoices will appear here once payment history is available.</p>
+              <p className="mt-3 text-xs text-gray-400">Last checked: {formatDate(new Date().toISOString())}</p>
+            </div>
           </CardBody>
         </Card>
       </div>
 
       <ConfirmDialog
-        isOpen={!!confirmPlan}
-        onClose={() => setConfirmPlan(null)}
+        open={!!confirmPlan}
+        onCancel={() => setConfirmPlan(null)}
         onConfirm={handleUpgrade}
         title={`Switch to ${targetPlan?.name ?? ""} plan`}
-        message={`You will be charged ${targetPlan && targetPlan.monthlyPrice > 0 ? formatCurrency(targetPlan.monthlyPrice) + "/month" : "nothing"} starting from your next billing cycle.`}
-        confirmLabel="Confirm switch"
+        description={`You will be charged ${targetPlan && targetPlan.monthlyPrice > 0 ? formatCurrency(targetPlan.monthlyPrice) + "/month" : "nothing"} starting from your next billing cycle.`}
+        confirmText="Confirm switch"
         isLoading={loading}
       />
-    </AppLayout>
+    </div>
   )
 }

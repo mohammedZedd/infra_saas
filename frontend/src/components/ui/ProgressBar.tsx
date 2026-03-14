@@ -1,44 +1,105 @@
+import React from "react"
 import { cn } from "../../utils/cn"
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
 export interface ProgressBarProps {
+  /** Current progress value */
   value: number
+  /** Maximum value — defaults to 100 */
+  max?: number
+  /** Optional label rendered above the bar on the left */
   label?: string
-  annotation?: string
-  variant?: "indigo" | "green" | "yellow" | "red"
+  /**
+   * Show the computed percentage or "value / max" on the right.
+   * Defaults to true.
+   */
+  showValue?: boolean
+  /** Visual colour variant */
+  variant?: "default" | "success" | "warning" | "danger"
+  /** Bar height */
   size?: "sm" | "md" | "lg"
-  animated?: boolean
+  /** Extra classes applied to the outermost wrapper */
   className?: string
+  /** Accessible label — falls back to `label` if omitted */
+  ariaLabel?: string
 }
 
-const fillVariant: Record<NonNullable<ProgressBarProps["variant"]>, string> = {
-  indigo: "bg-indigo-500",
-  green: "bg-green-500",
-  yellow: "bg-yellow-500",
-  red: "bg-red-500",
+// ---------------------------------------------------------------------------
+// Style maps
+// ---------------------------------------------------------------------------
+
+const FILL_CLASS: Record<NonNullable<ProgressBarProps["variant"]>, string> = {
+  default: "bg-blue-600",
+  success: "bg-green-600",
+  warning: "bg-yellow-500",
+  danger: "bg-red-600",
 }
 
-const trackSize: Record<NonNullable<ProgressBarProps["size"]>, string> = {
-  sm: "h-1.5",
-  md: "h-2",
-  lg: "h-3",
+const TRACK_SIZE: Record<NonNullable<ProgressBarProps["size"]>, string> = {
+  sm: "h-2",
+  md: "h-3",
+  lg: "h-4",
 }
 
-export function ProgressBar({ value, label, annotation, variant = "indigo", size = "md", animated = false, className }: ProgressBarProps) {
-  const clamped = Math.min(100, Math.max(0, value))
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function ProgressBar({
+  value,
+  max = 100,
+  label,
+  showValue = true,
+  variant = "default",
+  size = "md",
+  className,
+  ariaLabel,
+}: ProgressBarProps): React.ReactElement {
+  const safeMax = max > 0 ? max : 100
+  const clamped = Math.min(safeMax, Math.max(0, value))
+  const percent = (clamped / safeMax) * 100
+
+  // Value display: show "x%" when max is 100, "x / max" otherwise
+  const valueLabel =
+    safeMax === 100 ? `${Math.round(percent)}%` : `${clamped} / ${safeMax}`
+
+  const accessibleLabel = ariaLabel ?? label ?? "Progress"
 
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      {(label || annotation) && (
-        <div className="flex items-center justify-between">
-          {label && <span className="text-sm font-medium text-gray-700">{label}</span>}
-          {annotation && <span className="text-sm text-gray-500">{annotation}</span>}
+    <div className={cn("w-full", className)}>
+      {/* Label row */}
+      {(label !== undefined || showValue) && (
+        <div className="mb-2 flex items-center justify-between">
+          {label !== undefined && (
+            <span className="text-sm font-medium text-gray-700">{label}</span>
+          )}
+          {showValue && (
+            <span className="ml-auto text-sm text-gray-500 tabular-nums">
+              {valueLabel}
+            </span>
+          )}
         </div>
       )}
 
-      <div className={cn("overflow-hidden rounded-full bg-gray-200", trackSize[size])}>
+      {/* Track */}
+      <div
+        role="progressbar"
+        aria-valuenow={clamped}
+        aria-valuemin={0}
+        aria-valuemax={safeMax}
+        aria-label={accessibleLabel}
+        className={cn("w-full overflow-hidden rounded-full bg-gray-200", TRACK_SIZE[size])}
+      >
+        {/* Fill */}
         <div
-          className={cn("h-full rounded-full transition-all duration-500 ease-out", fillVariant[variant], animated && "animate-pulse")}
-          style={{ width: `${clamped}%` }}
+          className={cn(
+            "h-full rounded-full transition-all duration-300 ease-out",
+            FILL_CLASS[variant]
+          )}
+          style={{ width: `${percent}%` }}
         />
       </div>
     </div>

@@ -2,24 +2,7 @@ import { useState } from 'react'
 import AwsResourceModal, { AwsResourceSection, FormField } from './AwsResourceModal'
 import { Input } from '../../ui/Input'
 import { Button } from '../../ui/Button'
-
-export interface SGRule {
-  id: string
-  type: string
-  protocol: string
-  portRange: string
-  cidrOrSource: string
-}
-
-export interface SecurityGroupConfig {
-  name: string
-  description: string
-  vpcId: string
-  vpcCidr?: string
-  inboundRules: SGRule[]
-  outboundRules: SGRule[]
-  tags: Record<string, string>
-}
+import type { SGRule, SecurityGroupConfig } from '../../../types/aws-resources'
 
 interface Props {
   isOpen: boolean

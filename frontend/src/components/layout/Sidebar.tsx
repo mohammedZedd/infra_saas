@@ -1,9 +1,10 @@
+import { useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { ChevronLeft, ChevronRight, Circle, CreditCard, LayoutDashboard, Plus, Store } from "lucide-react"
 import { cn } from "../../utils/cn"
 import useUIStore from "../../stores/useUIStore"
-import useProjectStore from "../../stores/useProjectStore"
 import useAuthStore from "../../stores/useAuthStore"
+import useProjectStore from "../../stores/useProjectStore"
 import { truncate } from "../../utils/format"
 
 const NAV_LINKS = [
@@ -24,10 +25,14 @@ export function Sidebar() {
   const collapsed = useUIStore((s) => s.sidebarCollapsed)
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
   const openModal = useUIStore((s) => s.openModal)
-  const projects = useProjectStore((s) => s.projects)
   const user = useAuthStore((s) => s.user)
+  const projects = useProjectStore((s) => s.projects)
+  const fetchProjects = useProjectStore((s) => s.fetchProjects)
   const location = useLocation()
   const navigate = useNavigate()
+  useEffect(() => {
+    void fetchProjects()
+  }, [fetchProjects])
 
   const recentProjects = [...projects]
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
@@ -93,7 +98,7 @@ export function Sidebar() {
               </button>
             ))}
 
-            {recentProjects.length === 0 && <p className="px-3 py-1.5 text-sm italic text-gray-400">No projects</p>}
+            {recentProjects.length === 0 && <p className="px-3 py-1.5 text-sm italic text-gray-400">No recent projects</p>}
 
             <button
               type="button"

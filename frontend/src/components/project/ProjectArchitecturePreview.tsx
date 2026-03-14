@@ -1,5 +1,6 @@
-import { useMemo, useCallback, useState } from "react"
+import { useMemo, useCallback, useEffect, useState } from "react"
 import type { Node } from "@xyflow/react"
+import type { Edge } from "@xyflow/react"
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -13,9 +14,11 @@ import useEditorStore from "../../stores/useEditorStore"
 import { cn } from "../../utils/cn"
 import { Button } from "../ui/Button"
 import { nodeTypes } from "../canvas/nodes/nodeTypes"
+import type { Project } from "../../types/project.types"
 
 interface ProjectArchitecturePreviewProps {
   projectId: string
+  architectureData?: Project["architecture_data"]
   onNodeClick?: (nodeId: string) => void
   onOpenEditor?: () => void
   readOnly?: boolean
@@ -23,15 +26,45 @@ interface ProjectArchitecturePreviewProps {
 }
 
 export function ProjectArchitecturePreview({
+  projectId,
+  architectureData,
   onNodeClick,
   onOpenEditor,
   readOnly = true,
   compact = false,
 }: ProjectArchitecturePreviewProps) {
-  const nodes = useEditorStore((state: any) => state.nodes)
-  const edges = useEditorStore((state: any) => state.edges)
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [edges, setEdges] = useState<Edge[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [hoveredNode, setHoveredNode] = useState<Node | null>(null)
+  const storeNodes = useEditorStore((state: any) => state.nodes)
+  const storeEdges = useEditorStore((state: any) => state.edges)
+
+  useEffect(() => {
+    if (!projectId) {
+      setNodes([])
+      setEdges([])
+      setIsLoading(false)
+      return
+    }
+
+    // In read-only preview mode we always resolve architecture from project-specific storage.
+    // This avoids leaking global editor state across projects.
+    if (readOnly) {
+      const previewNodes = Array.isArray(architectureData?.nodes) ? (architectureData?.nodes as Node[]) : []
+      const previewEdges = Array.isArray(architectureData?.edges) ? (architectureData?.edges as Edge[]) : []
+      setNodes(previewNodes)
+      setEdges(previewEdges)
+      setIsLoading(false)
+      return
+    }
+
+    // Interactive mode keeps using the live editor store.
+    setNodes(storeNodes)
+    setEdges(storeEdges)
+    setIsLoading(false)
+  }, [projectId, architectureData, readOnly, storeNodes, storeEdges])
 
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
@@ -51,6 +84,19 @@ export function ProjectArchitecturePreview({
 
   const nodeTypesMemo = useMemo(() => nodeTypes, [])
   const edgeTypes = useMemo(() => ({}), [])
+
+  if (isLoading) {
+    return (
+      <div
+        className={cn(
+          "rounded-lg border border-gray-200 bg-white flex flex-col items-center justify-center text-sm text-gray-500",
+          compact ? "h-64" : "h-96"
+        )}
+      >
+        Loading architecture...
+      </div>
+    )
+  }
 
   // If no nodes, show empty state
   if (nodes.length === 0) {
@@ -78,10 +124,10 @@ export function ProjectArchitecturePreview({
             </svg>
           </div>
           <p className="text-sm font-medium text-gray-900">
-            No architecture yet
+            No infrastructure defined yet
           </p>
           <p className="mt-1 text-sm text-gray-500 mb-4">
-            Design your infrastructure in the editor to see it visualized here.
+            Open Editor to start building.
           </p>
           {onOpenEditor && (
             <Button

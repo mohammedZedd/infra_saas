@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
 import { format } from "date-fns"
 import { CheckCircle, AlertCircle, Clock, ChevronRight } from "lucide-react"
 import { cn } from "../../utils/cn"
@@ -61,9 +62,11 @@ const COMMAND_COLORS = {
 }
 
 export function ProjectRunHistory({
+  projectId,
   runs,
   onViewDetails,
 }: ProjectRunHistoryProps) {
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState("")
   const [sortConfig, setSortConfig] = useState<{
     key: keyof TerraformRun
@@ -225,7 +228,13 @@ export function ProjectRunHistory({
                   </td>
                   <td className="px-6 py-4">
                     <button
-                      onClick={() => onViewDetails?.(run.id)}
+                      onClick={() => {
+                        if (projectId) {
+                          navigate(`/projects/${projectId}/runs/${run.id}`)
+                        } else {
+                          onViewDetails?.(run.id)
+                        }
+                      }}
                       className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
                     >
                       View Details

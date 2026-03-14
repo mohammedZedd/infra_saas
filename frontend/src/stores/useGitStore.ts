@@ -1,140 +1,171 @@
 import { create } from "zustand"
-import type { GitRepository, GitCommit, GitBranch, GitConfig } from "../types/git"
 
-interface GitState extends GitConfig {
-  // Actions - Repository
-  connectRepository: (repo: GitRepository) => void
-  disconnectRepository: () => void
+// ── Types ────────────────────────────────────────────────────────────────────
 
-  // Actions - Branches
-  switchBranch: (branch: string) => void
-  createBranch: (name: string) => void
-
-  // Actions - Push
-  pushToGit: (message: string, branch: string, files: string[]) => Promise<void>
-
-  // Actions - History
-  getCommitDiff: (commitId: string) => GitCommit | null
+export interface GitConnection {
+  id: string
+  provider: string
+  repoUrl: string
+  repoName: string
+  branch: string
+  username: string
+  connectedAt: string
+  status: "connected" | "disconnected" | "error"
 }
 
-// Mock commits pour démo
-const MOCK_COMMITS: GitCommit[] = [
+export interface SyncEntry {
+  id: string
+  action: "pull" | "push"
+  filesCount: number
+  message: string
+  date: string
+}
+
+interface GitState {
+  connections: GitConnection[]
+  isLoading: boolean
+  lastPulledAt: string | null
+  lastPushedAt: string | null
+  pendingPullFiles: string[]
+  pendingPushFiles: string[]
+  syncHistory: SyncEntry[]
+  commitMessage: string
+  addConnection: (connection: GitConnection) => void
+  updateConnection: (id: string, data: Partial<GitConnection>) => void
+  removeConnection: (id: string) => void
+  setLoading: (loading: boolean) => void
+  setCommitMessage: (message: string) => void
+  simulatePull: () => void
+  simulatePush: () => void
+}
+
+// ── Mock initial sync history ────────────────────────────────────────────────
+
+const MOCK_SYNC_HISTORY: SyncEntry[] = [
   {
-    id: "c1",
-    hash: "a3f2b1c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4",
-    shortHash: "a3f2b1c",
-    message: "Initial infrastructure setup — VPC, EC2, RDS",
-    author: "John Doe",
-    date: "2024-03-15T10:30:00Z",
-    branch: "main",
-    filesChanged: ["main.tf", "variables.tf", "outputs.tf", "backend.tf"],
-    additions: 142,
-    deletions: 0,
+    id: "s1",
+    action: "push",
+    filesCount: 3,
+    message: "Update EC2 config",
+    date: "Oct 28, 2025 at 14:32",
   },
   {
-    id: "c2",
-    hash: "b4e3c2d1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5",
-    shortHash: "b4e3c2d",
-    message: "Add security group rules for web traffic",
-    author: "John Doe",
-    date: "2024-03-16T14:22:00Z",
-    branch: "main",
-    filesChanged: ["main.tf"],
-    additions: 28,
-    deletions: 3,
+    id: "s2",
+    action: "pull",
+    filesCount: 1,
+    message: "Sync from remote",
+    date: "Oct 27, 2025 at 11:45",
   },
   {
-    id: "c3",
-    hash: "c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6",
-    shortHash: "c5d4e3f",
-    message: "Configure CloudFront distribution with S3 origin",
-    author: "John Doe",
-    date: "2024-03-17T09:15:00Z",
-    branch: "main",
-    filesChanged: ["main.tf", "outputs.tf"],
-    additions: 45,
-    deletions: 2,
+    id: "s3",
+    action: "push",
+    filesCount: 5,
+    message: "Add RDS module",
+    date: "Oct 26, 2025 at 16:20",
+  },
+  {
+    id: "s4",
+    action: "pull",
+    filesCount: 2,
+    message: "Fetch latest changes",
+    date: "Oct 25, 2025 at 09:15",
+  },
+  {
+    id: "s5",
+    action: "push",
+    filesCount: 1,
+    message: "Fix subnet config",
+    date: "Oct 24, 2025 at 13:50",
   },
 ]
 
-const MOCK_BRANCHES: GitBranch[] = [
-  { name: "main", isDefault: true, lastCommit: "c5d4e3f" },
-  { name: "staging", isDefault: false, lastCommit: "b4e3c2d" },
-  { name: "feature/monitoring", isDefault: false, lastCommit: "a3f2b1c" },
-]
+// ── Store ────────────────────────────────────────────────────────────────────
 
-const useGitStore = create<GitState>((set, get) => ({
-  repository: null,
-  branches: [],
-  commits: [],
-  currentBranch: "main",
-  isPushing: false,
-  lastPushedAt: null,
+const useGitStore = create<GitState>((set) => ({
+  connections: [],
+  isLoading: false,
+  lastPulledAt: "Oct 28, 2025 at 14:32",
+  lastPushedAt: "Oct 27, 2025 at 09:15",
+  pendingPullFiles: ["main.tf", "variables.tf", "outputs.tf"],
+  pendingPushFiles: ["main.tf", "variables.tf"],
+  syncHistory: MOCK_SYNC_HISTORY,
+  commitMessage: "Update infrastructure config",
 
-  connectRepository: (repo) => {
-    set({
-      repository: repo,
-      branches: MOCK_BRANCHES,
-      commits: MOCK_COMMITS,
-      currentBranch: repo.defaultBranch,
-    })
+  addConnection: (connection) =>
+    set((state) => ({ connections: [...state.connections, connection] })),
+
+  updateConnection: (id, data) =>
+    set((state) => ({
+      connections: state.connections.map((c) =>
+        c.id === id ? { ...c, ...data } : c
+      ),
+    })),
+
+  removeConnection: (id) =>
+    set((state) => ({
+      connections: state.connections.filter((c) => c.id !== id),
+    })),
+
+  setLoading: (loading) => set({ isLoading: loading }),
+
+  setCommitMessage: (message) => set({ commitMessage: message }),
+
+  simulatePull: () => {
+    set((state) => ({
+      lastPulledAt: new Date().toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      pendingPullFiles: [],
+      syncHistory: [
+        {
+          id: `sync-${Date.now()}`,
+          action: "pull",
+          filesCount: state.pendingPullFiles.length,
+          message: "Pulled from remote",
+          date: new Date().toLocaleString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+        ...state.syncHistory,
+      ],
+    }))
   },
 
-  disconnectRepository: () => {
-    set({
-      repository: null,
-      branches: [],
-      commits: [],
-      currentBranch: "main",
-      lastPushedAt: null,
-    })
-  },
-
-  switchBranch: (branch) => {
-    set({ currentBranch: branch })
-  },
-
-  createBranch: (name) => {
-    const newBranch: GitBranch = {
-      name,
-      isDefault: false,
-      lastCommit: get().commits[0]?.shortHash || "",
-    }
-    set({ branches: [...get().branches, newBranch], currentBranch: name })
-  },
-
-  pushToGit: async (message, branch, files) => {
-    set({ isPushing: true })
-
-    // Simulate push delay
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    const newCommit: GitCommit = {
-      id: `c${Date.now()}`,
-      hash: Array.from({ length: 40 }, () =>
-        Math.floor(Math.random() * 16).toString(16)
-      ).join(""),
-      shortHash: Array.from({ length: 7 }, () =>
-        Math.floor(Math.random() * 16).toString(16)
-      ).join(""),
-      message,
-      author: "John Doe",
-      date: new Date().toISOString(),
-      branch,
-      filesChanged: files,
-      additions: Math.floor(Math.random() * 50) + 5,
-      deletions: Math.floor(Math.random() * 15),
-    }
-
-    set({
-      commits: [newCommit, ...get().commits],
-      isPushing: false,
-      lastPushedAt: new Date().toISOString(),
-    })
-  },
-
-  getCommitDiff: (commitId) => {
-    return get().commits.find((c) => c.id === commitId) || null
+  simulatePush: () => {
+    set((state) => ({
+      lastPushedAt: new Date().toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      pendingPushFiles: [],
+      syncHistory: [
+        {
+          id: `sync-${Date.now()}`,
+          action: "push",
+          filesCount: state.pendingPushFiles.length,
+          message: state.commitMessage || "Pushed to remote",
+          date: new Date().toLocaleString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+        ...state.syncHistory,
+      ],
+    }))
   },
 }))
 

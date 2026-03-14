@@ -2,33 +2,7 @@ import { useState } from 'react'
 import AwsResourceModal, { AwsResourceSection, FormField } from './AwsResourceModal'
 import { Input } from '../../ui/Input'
 import { Button } from '../../ui/Button'
-
-export interface LambdaConfig {
-  // Basic Settings
-  functionName: string
-  runtime: string
-  handler: string
-
-  // Memory & Timeout
-  memory: number // 128 to 10240 MB
-  timeout: number // seconds
-
-  // Triggers (Mocked)
-  triggers: Array<{
-    id: string
-    type: 'api-gateway' | 's3' | 'dynamodb' | 'sqs' | 'eventbridge'
-    name: string
-  }>
-
-  // Environment Variables
-  environmentVariables: Record<string, string>
-
-  // IAM Role
-  iamRoleName: string
-
-  // Tags
-  tags: Record<string, string>
-}
+import type { LambdaConfig } from '../../../types/aws-resources'
 
 interface LambdaConfigModalProps {
   isOpen: boolean

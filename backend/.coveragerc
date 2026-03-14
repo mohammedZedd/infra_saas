@@ -1,0 +1,22 @@
+[run]
+branch = True
+source =
+    apis
+    core
+    main
+    utils
+omit =
+    tests/*
+    alembic/*
+    */__init__.py
+    core/config.py
+    core/deps.py
+    main.py
+
+[report]
+show_missing = True
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    raise NotImplementedError

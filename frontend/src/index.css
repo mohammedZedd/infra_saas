@@ -214,6 +214,12 @@
   pointer-events: all !important;
 }
 
+/* Re-enable pointer events on NodeResizer handles inside container nodes */
+.react-flow__node-vpcNode .react-flow__resize-control,
+.react-flow__node-subnetNode .react-flow__resize-control {
+  pointer-events: all !important;
+}
+
 /* ─── Edge layer above container nodes ──────────────────────────────────────── */
 .react-flow__edge {
   z-index: 9999 !important;

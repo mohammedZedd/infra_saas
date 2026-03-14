@@ -1,140 +1,264 @@
-import React, { useState } from "react"
-import { Check, type LucideIcon } from "lucide-react"
+import React, { useCallback } from "react"
+import { Check, Loader2 } from "lucide-react"
 import { cn } from "../../utils/cn"
-import Button from "./Button"
 
-export interface WizardStep {
-  key: string
-  label: string
-  icon?: LucideIcon
-  content: React.ReactNode
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export type StepId = string
+
+export interface StepDefinition {
+  /** Unique identifier — used as the controlled key */
+  id: StepId
+  /** Label shown in the stepper header */
+  title: string
+  /** Optional subtitle shown below the title (desktop only) */
   description?: string
+  /** Content rendered when this step is active */
+  content: React.ReactNode
+  /**
+   * Whether the user may proceed from this step.
+   * Defaults to `true`. When `false` the Next button is disabled.
+   */
+  isValid?: boolean
+  /** When true the stepper shows "(optional)" beneath the title */
+  isOptional?: boolean
+  /**
+   * Optional side-effect hook called just before the wizard advances
+   * from this step. The wizard waits for the promise to resolve.
+   */
+  onNext?: () => void | Promise<void>
+  /** Optional side-effect hook called when Back is pressed on this step */
+  onBack?: () => void
 }
 
 export interface StepWizardProps {
-  steps: WizardStep[]
-  onComplete: () => void
-  onCancel: () => void
-  finishLabel?: string
+  steps: StepDefinition[]
+  /** Controlled — id of the currently visible step */
+  activeStepId: StepId
+  /** Called with the next/previous step id when navigation occurs */
+  onStepChange: (stepId: StepId) => void
+  /** Called when the user clicks Finish on the last step */
+  onFinish?: () => void | Promise<void>
+  /**
+   * When true the Next/Finish button shows a spinner and both nav buttons
+   * are disabled.
+   */
   isSubmitting?: boolean
-  onStepValidate?: (stepKey: string, stepIndex: number) => boolean | Promise<boolean>
+  /**
+   * When true, clicking a stepper header item calls `onStepChange`.
+   * Forward jumps are blocked if any intermediate step is invalid.
+   * Defaults to false.
+   */
+  allowStepClick?: boolean
+  /** Label for the Finish button. Defaults to "Finish". */
+  finishLabel?: string
+  /** Extra classes on the outermost container */
+  className?: string
 }
 
-export function StepWizard({ steps, onComplete, onCancel, finishLabel = "Create", isSubmitting = false, onStepValidate }: StepWizardProps) {
-  const [current, setCurrent] = useState(0)
-  const [completed, setCompleted] = useState<Set<number>>(new Set())
+// ---------------------------------------------------------------------------
+// StepIndicator
+// ---------------------------------------------------------------------------
 
-  const isFirst = current === 0
-  const isLast = current === steps.length - 1
+interface StepIndicatorProps {
+  step: StepDefinition
+  index: number
+  isActive: boolean
+  isCompleted: boolean
+  isClickable: boolean
+  isLast: boolean
+  onClick: () => void
+}
 
-  const advance = async () => {
-    if (onStepValidate) {
-      const valid = await onStepValidate(steps[current].key, current)
-      if (!valid) return
-    }
-    setCompleted((prev) => new Set(prev).add(current))
-    if (isLast) {
-      onComplete()
-    } else {
-      setCurrent((c) => c + 1)
-    }
-  }
+function StepIndicator({
+  step,
+  index,
+  isActive,
+  isCompleted,
+  isClickable,
+  isLast,
+  onClick,
+}: StepIndicatorProps): React.ReactElement {
+  return (
+    <div className="flex flex-1 items-center last:flex-none">
+      {/* Circle + label */}
+      <button
+        type="button"
+        disabled={!isClickable}
+        onClick={onClick}
+        aria-current={isActive ? "step" : undefined}
+        aria-label={`Step ${index + 1}: ${step.title}`}
+        className={cn(
+          "flex flex-col items-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+          isClickable ? "cursor-pointer" : "cursor-default"
+        )}
+      >
+        {/* Number / check circle */}
+        <div
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200",
+            isCompleted
+              ? "bg-blue-600 text-white"
+              : isActive
+              ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+              : "border-2 border-gray-200 bg-white text-gray-400"
+          )}
+        >
+          {isCompleted ? <Check className="h-4 w-4" aria-hidden /> : index + 1}
+        </div>
+
+        {/* Title — hidden on mobile to avoid overflow */}
+        <span
+          className={cn(
+            "mt-1.5 hidden text-xs font-medium whitespace-nowrap md:block",
+            isActive ? "text-blue-600" : isCompleted ? "text-gray-700" : "text-gray-400"
+          )}
+        >
+          {step.title}
+        </span>
+
+        {/* Optional badge */}
+        {step.isOptional === true && !isCompleted && (
+          <span className="hidden text-[10px] text-gray-400 md:block">(optional)</span>
+        )}
+      </button>
+
+      {/* Connector line between circles */}
+      {!isLast && (
+        <div
+          aria-hidden
+          className={cn(
+            "mx-3 mb-5 h-0.5 flex-1 rounded-full transition-colors duration-300",
+            isCompleted ? "bg-blue-600" : "bg-gray-200"
+          )}
+        />
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// StepWizard
+// ---------------------------------------------------------------------------
+
+export function StepWizard({
+  steps,
+  activeStepId,
+  onStepChange,
+  onFinish,
+  isSubmitting = false,
+  allowStepClick = false,
+  finishLabel = "Finish",
+  className,
+}: StepWizardProps): React.ReactElement {
+  const activeIndex = steps.findIndex((s) => s.id === activeStepId)
+  const safeIndex = activeIndex < 0 ? 0 : activeIndex
+  const activeStep = steps[safeIndex]
+
+  const isFirst = safeIndex === 0
+  const isLast = safeIndex === steps.length - 1
+  const currentIsValid = activeStep?.isValid !== false
+
+  // Determine whether header item at `index` may be clicked
+  const isStepClickable = useCallback(
+    (index: number): boolean => {
+      if (!allowStepClick || index === safeIndex) return false
+      if (index < safeIndex) return true
+      // Forward jump: all intermediate steps must be valid
+      for (let i = safeIndex; i < index; i++) {
+        if (steps[i].isValid === false) return false
+      }
+      return true
+    },
+    [allowStepClick, safeIndex, steps]
+  )
+
+  const handleBack = useCallback((): void => {
+    if (isFirst || isSubmitting) return
+    activeStep?.onBack?.()
+    onStepChange(steps[safeIndex - 1].id)
+  }, [isFirst, isSubmitting, activeStep, onStepChange, steps, safeIndex])
+
+  const handleNext = useCallback((): void => {
+    if (!currentIsValid || isSubmitting) return
+    void (async () => {
+      try {
+        await activeStep?.onNext?.()
+      } catch {
+        // Validation hooks can reject to keep the user on the current step.
+        return
+      }
+      if (isLast) {
+        await onFinish?.()
+      } else {
+        onStepChange(steps[safeIndex + 1].id)
+      }
+    })()
+  }, [currentIsValid, isSubmitting, activeStep, isLast, onFinish, onStepChange, steps, safeIndex])
 
   return (
-    <div className="flex h-full flex-col">
-      {/* ===== STEP INDICATORS — HORIZONTAL TOP BAR ===== */}
+    <div className={cn("flex h-full flex-col bg-white", className)}>
+      {/* Stepper header */}
       <div className="px-6 pt-5 pb-4">
         <div className="flex items-center">
           {steps.map((step, index) => (
-            <div key={step.key} className="flex items-center flex-1 last:flex-none">
-              {/* Circle + Label group */}
-              <div
-                className="flex flex-col items-center cursor-pointer"
-                onClick={() => {
-                  if (index < current || completed.has(index)) {
-                    setCurrent(index)
-                  }
-                }}
-              >
-                {/* Circle */}
-                <div
-                  className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200",
-                    index < current
-                      ? "bg-indigo-600 text-white"
-                      : index === current
-                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                      : "bg-gray-100 text-gray-400 border-2 border-gray-200"
-                  )}
-                >
-                  {index < current ? (
-                    <Check size={16} />
-                  ) : (
-                    index + 1
-                  )}
-                </div>
-                {/* Label */}
-                <span
-                  className={cn(
-                    "mt-1.5 text-xs font-medium whitespace-nowrap",
-                    index === current ? "text-indigo-600" : index < current ? "text-gray-700" : "text-gray-400"
-                  )}
-                >
-                  {step.label}
-                </span>
-              </div>
-
-              {/* Connecting line between circles */}
-              {index < steps.length - 1 && (
-                <div
-                  className={cn(
-                    "flex-1 h-0.5 mx-3 mb-5 rounded-full transition-colors duration-300",
-                    index < current ? "bg-indigo-600" : "bg-gray-200"
-                  )}
-                />
-              )}
-            </div>
+            <StepIndicator
+              key={step.id}
+              step={step}
+              index={index}
+              isActive={index === safeIndex}
+              isCompleted={index < safeIndex}
+              isClickable={isStepClickable(index)}
+              isLast={index === steps.length - 1}
+              onClick={() => onStepChange(step.id)}
+            />
           ))}
         </div>
       </div>
 
-      {/* ===== DIVIDER ===== */}
       <div className="border-t border-gray-100" />
 
-      {/* ===== STEP CONTENT — FULL WIDTH ===== */}
+      {/* Step content */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
-        {steps[current].content}
+        {activeStep?.content}
       </div>
 
-      {/* ===== FOOTER BUTTONS ===== */}
-      <div className="border-t border-gray-100 bg-gray-50/50 px-6 py-4 flex items-center justify-between">
+      {/* Footer */}
+      <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-6 py-4">
+        {/* Back */}
         <button
           type="button"
-          onClick={onCancel}
-          className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-        >
-            Cancel
-        </button>
-        <div className="flex items-center gap-3">
-          {!isFirst && (
-            <button
-              type="button"
-              onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-all"
-            >
-              Previous
-            </button>
+          onClick={handleBack}
+          disabled={isFirst || isSubmitting}
+          aria-label="Go to previous step"
+          className={cn(
+            "rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors",
+            isFirst || isSubmitting
+              ? "cursor-not-allowed opacity-50"
+              : "hover:bg-gray-50"
           )}
-          <Button
-            variant="primary"
-            size="sm"
-            isLoading={isLast && isSubmitting}
-            onClick={advance}
-            className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {isLast ? finishLabel : "Next"}
-          </Button>
-        </div>
+        >
+          Back
+        </button>
+
+        {/* Next / Finish */}
+        <button
+          type="button"
+          onClick={handleNext}
+          disabled={!currentIsValid || isSubmitting}
+          aria-label={isLast ? finishLabel : "Go to next step"}
+          className={cn(
+            "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors",
+            !currentIsValid || isSubmitting
+              ? "cursor-not-allowed opacity-60"
+              : "hover:bg-blue-700"
+          )}
+        >
+          {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
+          {isSubmitting ? "Loading…" : isLast ? finishLabel : "Next"}
+        </button>
       </div>
     </div>
   )

@@ -2,34 +2,7 @@ import { useState } from 'react'
 import AwsResourceModal, { AwsResourceSection, FormField } from './AwsResourceModal'
 import { Input } from '../../ui/Input'
 import { Button } from '../../ui/Button'
-
-export interface Listener {
-  id: string
-  protocol: string
-  port: number
-  targetGroup?: string
-  sslCert?: string
-}
-
-export interface ElbConfig {
-  name: string
-  type: 'ALB' | 'NLB' | 'CLB'
-  vpcId: string
-  subnets: string[]
-  listeners: Listener[]
-  healthCheck: {
-    protocol: string
-    port: number
-    path?: string
-    healthyThreshold: number
-    unhealthyThreshold: number
-    timeout: number
-    interval: number
-  }
-  securityGroups: string[]
-  internal: boolean
-  tags: Record<string,string>
-}
+import type { ElbConfig } from '../../../types/aws-resources'
 
 interface Props {
   isOpen: boolean

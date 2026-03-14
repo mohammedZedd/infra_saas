@@ -1,23 +1,12 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Database, Download, Globe, Lock, Package, Server, Zap } from "lucide-react"
-import { AppLayout } from "../components/layout/AppLayout"
 import { Badge } from "../components/ui/Badge"
 import { Button } from "../components/ui/Button"
 import { SearchInput } from "../components/ui/SearchInput"
 import { EmptyState } from "../components/ui/EmptyState"
 import { cn } from "../utils/cn"
-
-interface Template {
-  id: string
-  name: string
-  description: string
-  category: string
-  icon: React.ElementType
-  nodeCount: number
-  downloads: number
-  tags: string[]
-}
+import type { Template } from "../types/marketplace"
 
 const TEMPLATES: Template[] = [
   { id: "t1", name: "Production VPC", description: "Full VPC with public/private subnets, NAT gateway, and security groups.", category: "Networking", icon: Globe, nodeCount: 8, downloads: 1420, tags: ["vpc", "ec2", "networking"] },
@@ -44,7 +33,7 @@ export default function Marketplace() {
   })
 
   return (
-    <AppLayout>
+    <div className="p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Template Marketplace</h1>
         <p className="mt-1 text-sm text-gray-500">Start from a battle-tested template and customize it to your needs.</p>
@@ -123,6 +112,6 @@ export default function Marketplace() {
           })}
         </div>
       )}
-    </AppLayout>
+    </div>
   )
 }

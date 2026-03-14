@@ -2,36 +2,7 @@ import { useState, useCallback } from 'react'
 import AwsResourceModal, { AwsResourceSection, FormField } from './AwsResourceModal'
 import { Input } from '../../ui/Input'
 import { Button } from '../../ui/Button'
-
-export interface S3Config {
-  // General Settings
-  bucketName: string
-  region: string
-
-  // Versioning
-  versioning: boolean
-
-  // Public Access
-  blockPublicAcl: boolean
-  blockPublicPolicy: boolean
-  ignorePublicAcl: boolean
-  restrictPublicBuckets: boolean
-
-  // Encryption
-  encryption: 'none' | 'sse-s3' | 'sse-kms'
-  kmsKeyId?: string
-
-  // Tags
-  tags: Record<string, string>
-
-  // Lifecycle Rules
-  lifecycleRules: Array<{
-    id: string
-    prefix: string
-    expirationDays?: number
-    transitionToGlacierDays?: number
-  }>
-}
+import type { S3Config } from '../../../types/aws-resources'
 
 interface S3ConfigModalProps {
   isOpen: boolean

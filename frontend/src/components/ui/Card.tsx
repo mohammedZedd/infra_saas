@@ -1,89 +1,170 @@
-import React from "react"
-import { cn } from "../../utils/cn"
+import { forwardRef } from "react";
+import { cn } from "@/utils/cn";
 
-export interface CardProps {
-  children: React.ReactNode
-  className?: string
-  onClick?: React.MouseEventHandler<HTMLDivElement>
-  noPadding?: boolean
-  noBorder?: boolean
-  elevated?: boolean
-  clickable?: boolean
-  padding?: "sm" | "md" | "lg"
+// ---------------------------------------------------------------------------
+// Shared slot props type
+// ---------------------------------------------------------------------------
+
+interface SlotProps {
+  children: React.ReactNode;
+  className?: string;
 }
 
-const paddingClasses = {
+// ---------------------------------------------------------------------------
+// Card (root)
+// ---------------------------------------------------------------------------
+
+export interface CardProps extends SlotProps {
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  /** Remove default padding from the card root */
+  noPadding?: boolean;
+  /** Remove the border */
+  noBorder?: boolean;
+  /** Stronger shadow */
+  elevated?: boolean;
+  /** Show hover / focus styles and role="button" */
+  clickable?: boolean;
+  /** Root padding preset (only applied when noPadding is false) */
+  padding?: "sm" | "md" | "lg";
+}
+
+const PADDING_CLASS: Record<NonNullable<CardProps["padding"]>, string> = {
   sm: "p-4",
   md: "p-6",
   lg: "p-8",
+};
+
+export const Card = forwardRef<HTMLDivElement, CardProps>(
+  (
+    {
+      children,
+      className,
+      onClick,
+      noPadding = false,
+      noBorder = false,
+      elevated = false,
+      clickable,
+      padding = "md",
+    },
+    ref
+  ) => {
+    const isClickable = clickable ?? !!onClick;
+
+    return (
+      <div
+        ref={ref}
+        role={isClickable ? "button" : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        onClick={onClick}
+        onKeyDown={
+          onClick
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+                }
+              }
+            : undefined
+        }
+        className={cn(
+          "bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden",
+          noBorder && "border-none",
+          elevated && "shadow-md",
+          !noPadding && PADDING_CLASS[padding],
+          isClickable &&
+            "cursor-pointer transition-all duration-200 hover:shadow-md hover:border-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+          className
+        )}
+      >
+        {children}
+      </div>
+    );
+  }
+);
+Card.displayName = "Card";
+
+// ---------------------------------------------------------------------------
+// CardHeader
+// ---------------------------------------------------------------------------
+
+export const CardHeader = forwardRef<HTMLDivElement, SlotProps>(
+  ({ children, className }, ref) => (
+    <div ref={ref} className={cn("px-6 pt-6 space-y-1", className)}>
+      {children}
+    </div>
+  )
+);
+CardHeader.displayName = "CardHeader";
+
+// ---------------------------------------------------------------------------
+// CardTitle
+// ---------------------------------------------------------------------------
+
+export const CardTitle = forwardRef<HTMLHeadingElement, SlotProps>(
+  ({ children, className }, ref) => (
+    <h3 ref={ref} className={cn("text-lg font-semibold text-gray-900", className)}>
+      {children}
+    </h3>
+  )
+);
+CardTitle.displayName = "CardTitle";
+
+// ---------------------------------------------------------------------------
+// CardDescription
+// ---------------------------------------------------------------------------
+
+export const CardDescription = forwardRef<HTMLParagraphElement, SlotProps>(
+  ({ children, className }, ref) => (
+    <p ref={ref} className={cn("text-sm text-gray-600", className)}>
+      {children}
+    </p>
+  )
+);
+CardDescription.displayName = "CardDescription";
+
+// ---------------------------------------------------------------------------
+// CardBody / CardContent
+// ---------------------------------------------------------------------------
+
+export const CardBody = forwardRef<HTMLDivElement, SlotProps>(
+  ({ children, className }, ref) => (
+    <div ref={ref} className={cn("px-6 py-6", className)}>
+      {children}
+    </div>
+  )
+);
+CardBody.displayName = "CardBody";
+
+/** Alias for CardBody */
+export const CardContent = CardBody;
+
+// ---------------------------------------------------------------------------
+// CardFooter
+// ---------------------------------------------------------------------------
+
+export interface CardFooterProps extends SlotProps {
+  /** Show the top divider. Default: true */
+  border?: boolean;
 }
 
-export function Card({
-  children,
-  className,
-  onClick,
-  noPadding,
-  noBorder,
-  elevated = false,
-  clickable,
-  padding = "md",
-}: CardProps) {
-  const isClickable = clickable ?? !!onClick
-
-  return (
+export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
+  ({ children, className, border = true }, ref) => (
     <div
-      role={isClickable ? "button" : undefined}
-      tabIndex={isClickable ? 0 : undefined}
-      onClick={onClick}
-      onKeyDown={
-        onClick
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault()
-                onClick(e as unknown as React.MouseEvent<HTMLDivElement>)
-              }
-            }
-          : undefined
-      }
+      ref={ref}
       className={cn(
-        "overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm",
-        noBorder && "border-none",
-        elevated && "shadow-md",
-        !noPadding && paddingClasses[padding],
-        isClickable && "cursor-pointer transition-all duration-200 hover:shadow-md hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500",
+        "px-6 pb-6 flex items-center justify-end gap-3",
+        border && "border-t border-gray-100 pt-4",
         className
       )}
     >
       {children}
     </div>
   )
-}
+);
+CardFooter.displayName = "CardFooter";
 
-export interface CardHeaderProps {
-  children: React.ReactNode
-  className?: string
-}
+// ---------------------------------------------------------------------------
+// Default export
+// ---------------------------------------------------------------------------
 
-export function CardHeader({ children, className }: CardHeaderProps) {
-  return <div className={cn("border-b border-gray-100 px-6 py-4", className)}>{children}</div>
-}
-
-export interface CardBodyProps {
-  children: React.ReactNode
-  className?: string
-}
-
-export function CardBody({ children, className }: CardBodyProps) {
-  return <div className={cn("p-6", className)}>{children}</div>
-}
-
-export interface CardFooterProps {
-  children: React.ReactNode
-  className?: string
-}
-
-export function CardFooter({ children, className }: CardFooterProps) {
-  return <div className={cn("border-t border-gray-100 px-6 py-4", className)}>{children}</div>
-}
-
-export default Card
+export default Card;

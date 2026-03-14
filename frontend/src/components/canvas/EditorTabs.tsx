@@ -2,12 +2,14 @@ import { useState } from "react"
 import PropertiesPanel from "./PropertiesPanel"
 import SimulationPanel from "./SimulationPanel"
 import SettingsPanel from "./SettingsPanel"
+import DeploymentPanel from "../editor/DeploymentPanel"
 
-type TabId = "properties" | "simulate" | "settings"
+type TabId = "properties" | "simulate" | "deploy" | "settings"
 
 const TABS: { id: TabId; label: string; emoji: string }[] = [
   { id: "properties", label: "Properties", emoji: "⚙️" },
   { id: "simulate", label: "Simulate", emoji: "🧪" },
+  { id: "deploy", label: "Deploy", emoji: "🚀" },
   { id: "settings", label: "Settings", emoji: "⚡" },
 ]
 
@@ -20,6 +22,8 @@ export default function EditorTabs() {
         return <PropertiesPanel />
       case "simulate":
         return <SimulationPanel />
+      case "deploy":
+        return <DeploymentPanel />
       case "settings":
         return <SettingsPanel />
       default:

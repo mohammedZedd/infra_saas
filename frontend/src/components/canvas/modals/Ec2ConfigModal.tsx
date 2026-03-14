@@ -3,43 +3,7 @@ import { useState, useCallback } from 'react'
 import AwsResourceModal, { AwsResourceSection, FormField } from './AwsResourceModal'
 import { Button } from '../../ui/Button'
 import { Input } from '../../ui/Input'
-
-export interface EC2Config {
-  // Instance Details
-  instanceName: string
-  ami: string
-  instanceType: string
-
-  // Networking
-  vpcId: string
-  subnetId: string
-  assignPublicIp: boolean
-
-  // Storage
-  rootVolumeSize: number
-  rootVolumeType: 'gp2' | 'gp3' | 'io1' | 'io2'
-  rootVolumeIops?: number
-
-  // Security
-  securityGroupIds: string[]
-  
-  // Key Pair
-  keyPairName: string
-
-  // IAM Role
-  iamRoleName?: string
-
-  // Tags
-  tags: Record<string, string>
-
-  // Advanced
-  userData?: string
-  numberOfInstances?: number
-  purchaseOption?: 'on-demand' | 'spot'
-  spotBidPrice?: number
-  monitoring?: boolean
-  t2Unlimited?: boolean
-}
+import type { EC2Config } from '../../../types/aws-resources'
 
 interface Ec2ConfigModalProps {
   isOpen: boolean

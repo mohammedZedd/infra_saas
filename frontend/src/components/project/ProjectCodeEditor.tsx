@@ -11,55 +11,90 @@ interface ProjectCodeEditorProps {
   onEditInDesigner?: () => void
 }
 
+function getBadge(path: string): string {
+  if (path.endsWith(".tfvars")) return "tfvars"
+  if (path.endsWith(".tf") || path.endsWith(".hcl")) return "hcl"
+  if (path.endsWith(".gitignore")) return "ignore"
+  return path.split(".").pop() ?? "text"
+}
+
 export function ProjectCodeEditor({
   project,
   onEditInDesigner,
 }: ProjectCodeEditorProps) {
-  const [selectedFile, setSelectedFile] = useState<string>("main.tf")
+  const [selectedFile, setSelectedFile] = useState<string>("terragrunt.hcl")
   const [selectedLanguage, setSelectedLanguage] = useState<string>("hcl")
   const [fileContents, setFileContents] = useState<Record<string, string>>({
-    "main.tf": generateMainTf(project),
-    "variables.tf": generateVariablesTf(),
-    "outputs.tf": generateOutputsTf(),
-    "terraform.tfvars": generateTfvars(),
+    "terragrunt.hcl": generateRootTerragruntHcl(project),
+    "stack.hcl": generateStackHcl(project),
+    "modules/variables.tf": generateVariablesTf(),
+    "modules/outputs.tf": generateOutputsTf(),
+    "services/main.tf": generateMainTf(project),
+    "stacks/dev/terragrunt.hcl": generateEnvTerragruntHcl("dev", "t3.micro"),
+    "stacks/dev/terraform.tfvars": generateEnvTfvars("dev"),
+    "stacks/dev/backend.tf": generateBackendTf("dev"),
+    "stacks/staging/terragrunt.hcl": generateEnvTerragruntHcl("staging", "t3.small"),
+    "stacks/staging/terraform.tfvars": generateEnvTfvars("staging"),
+    "stacks/staging/backend.tf": generateBackendTf("staging"),
+    "stacks/prod/terragrunt.hcl": generateEnvTerragruntHcl("prod", "t3.medium"),
+    "stacks/prod/terraform.tfvars": generateEnvTfvars("prod"),
+    "stacks/prod/backend.tf": generateBackendTf("prod"),
   })
 
   const files: FileNode[] = [
+    { name: "terragrunt.hcl", path: "terragrunt.hcl", type: "file", language: "hcl" },
+    { name: "stack.hcl",      path: "stack.hcl",      type: "file", language: "hcl" },
     {
-      name: project.name.toLowerCase().replace(/\s+/g, "-"),
-      path: project.name.toLowerCase().replace(/\s+/g, "-"),
+      name: "modules",
+      path: "modules",
       type: "folder",
       children: [
-        { name: "main.tf", path: "main.tf", type: "file", language: "hcl" },
+        { name: "variables.tf", path: "modules/variables.tf", type: "file", language: "hcl" },
+        { name: "outputs.tf",   path: "modules/outputs.tf",   type: "file", language: "hcl" },
+      ],
+    },
+    {
+      name: "services",
+      path: "services",
+      type: "folder",
+      children: [
+        { name: "main.tf", path: "services/main.tf", type: "file", language: "hcl" },
+      ],
+    },
+    {
+      name: "stacks",
+      path: "stacks",
+      type: "folder",
+      children: [
         {
-          name: "variables.tf",
-          path: "variables.tf",
-          type: "file",
-          language: "hcl",
+          name: "dev",
+          path: "stacks/dev",
+          type: "folder",
+          children: [
+            { name: "terragrunt.hcl",    path: "stacks/dev/terragrunt.hcl",    type: "file", language: "hcl" },
+            { name: "terraform.tfvars",  path: "stacks/dev/terraform.tfvars",  type: "file", language: "hcl" },
+            { name: "backend.tf",        path: "stacks/dev/backend.tf",        type: "file", language: "hcl" },
+          ],
         },
         {
-          name: "outputs.tf",
-          path: "outputs.tf",
-          type: "file",
-          language: "hcl",
+          name: "staging",
+          path: "stacks/staging",
+          type: "folder",
+          children: [
+            { name: "terragrunt.hcl",   path: "stacks/staging/terragrunt.hcl",   type: "file", language: "hcl" },
+            { name: "terraform.tfvars", path: "stacks/staging/terraform.tfvars", type: "file", language: "hcl" },
+            { name: "backend.tf",       path: "stacks/staging/backend.tf",       type: "file", language: "hcl" },
+          ],
         },
         {
-          name: "terraform.tfvars",
-          path: "terraform.tfvars",
-          type: "file",
-          language: "hcl",
-        },
-        {
-          name: ".gitignore",
-          path: ".gitignore",
-          type: "file",
-          language: "properties",
-        },
-        {
-          name: "backend.tf",
-          path: "backend.tf",
-          type: "file",
-          language: "hcl",
+          name: "prod",
+          path: "stacks/prod",
+          type: "folder",
+          children: [
+            { name: "terragrunt.hcl",   path: "stacks/prod/terragrunt.hcl",   type: "file", language: "hcl" },
+            { name: "terraform.tfvars", path: "stacks/prod/terraform.tfvars", type: "file", language: "hcl" },
+            { name: "backend.tf",       path: "stacks/prod/backend.tf",       type: "file", language: "hcl" },
+          ],
         },
       ],
     },
@@ -83,7 +118,7 @@ export function ProjectCodeEditor({
         fileContents[selectedFile] || ""
       )}`
     )
-    element.setAttribute("download", selectedFile)
+    element.setAttribute("download", selectedFile.split("/").pop() ?? selectedFile)
     element.style.display = "none"
     document.body.appendChild(element)
     element.click()
@@ -100,6 +135,8 @@ export function ProjectCodeEditor({
 
   const lineCount = fileContents[selectedFile]?.split("\n").length || 0
   const fileSize = new Blob([fileContents[selectedFile] || ""]).size
+  const badge = getBadge(selectedFile)
+  const filename = selectedFile.split("/").pop() ?? selectedFile
 
   return (
     <div className="flex h-full flex-col bg-gray-50">
@@ -108,14 +145,14 @@ export function ProjectCodeEditor({
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-gray-900">
-              {selectedFile}
+              {filename}
             </h3>
             <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-              {selectedLanguage}
+              {badge}
             </span>
           </div>
           <p className="mt-0.5 text-xs text-gray-500">
-            {lineCount} lines • {(fileSize / 1024).toFixed(2)} KB
+            {selectedFile} &nbsp;·&nbsp; {lineCount} lines &nbsp;·&nbsp; {(fileSize / 1024).toFixed(2)} KB
           </p>
         </div>
 
@@ -156,6 +193,7 @@ export function ProjectCodeEditor({
             files={files}
             onSelectFile={handleSelectFile}
             selectedPath={selectedFile}
+            defaultExpandedPaths={new Set(["modules", "services", "stacks", "stacks/dev"])}
           />
         </div>
 
@@ -175,7 +213,7 @@ export function ProjectCodeEditor({
       <div className="border-t border-gray-200 bg-white px-6 py-3 text-xs text-gray-500">
         <div className="flex items-center justify-between">
           <div className="flex gap-4">
-            <span>HCL</span>
+            <span>{badge.toUpperCase()}</span>
             <span>UTF-8</span>
             <span>LF</span>
           </div>
@@ -189,69 +227,120 @@ export function ProjectCodeEditor({
   )
 }
 
-// ── Helper Functions ───────────────────────────────────────────────────────
+// ── Generator Functions ─────────────────────────────────────────────────────
+
+function generateRootTerragruntHcl(project: Project): string {
+  const slug = project.name.toLowerCase().replace(/\s+/g, "-")
+  return `# Root terragrunt.hcl — shared configuration inherited by all stacks
+# Project: ${project.name}  |  Region: ${project.region}
+
+locals {
+  project_name = "${slug}"
+  aws_region   = "${project.region}"
+  org          = "cloudforge"
+}
+
+# Generate a shared AWS provider block for all child modules
+generate "provider" {
+  path      = "provider.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<EOF
+provider "aws" {
+  region = "\${local.aws_region}"
+
+  default_tags {
+    tags = {
+      Project   = "\${local.project_name}"
+      ManagedBy = "Terragrunt"
+    }
+  }
+}
+EOF
+}
+
+# Remote state stored in S3 — each env uses its own key
+remote_state {
+  backend = "s3"
+  generate = {
+    path      = "backend.tf"
+    if_exists = "overwrite_terragrunt"
+  }
+  config = {
+    bucket         = "\${local.org}-terraform-state-\${local.aws_region}"
+    key            = "\${local.project_name}/\${path_relative_to_include()}/terraform.tfstate"
+    region         = local.aws_region
+    encrypt        = true
+    dynamodb_table = "\${local.org}-terraform-locks"
+  }
+}
+`
+}
+
+function generateStackHcl(project: Project): string {
+  const slug = project.name.toLowerCase().replace(/\s+/g, "-")
+  return `# stack.hcl — defines which Terraform module each stack points to
+# Included by stacks/*/terragrunt.hcl via find_in_parent_folders()
+
+locals {
+  root_vars = read_terragrunt_config(find_in_parent_folders("terragrunt.hcl"))
+  env       = basename(get_terragrunt_dir())
+}
+
+terraform {
+  source = "\${get_repo_root()}//services"
+}
+
+inputs = merge(
+  local.root_vars.locals,
+  {
+    environment  = local.env
+    project_name = "${slug}"
+  }
+)
+`
+}
 
 function generateMainTf(project: Project): string {
-  return `# Auto-generated Terraform configuration for ${project.name}
-# Created by CloudForge Infrastructure Designer
+  return `# services/main.tf — core AWS resources for ${project.name}
 # Region: ${project.region}
-# Project ID: ${project.id}
 
 terraform {
   required_version = ">= 1.6"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
   }
-
-  # Configure your backend (local, S3, Terraform Cloud, etc.)
-  # backend "s3" {
-  #   bucket         = "your-terraform-state-bucket"
-  #   key            = "${project.name.toLowerCase().replace(/\\s+/g, "-")}/terraform.tfstate"
-  #   region         = "${project.region}"
-  #   encrypt        = true
-  #   dynamodb_table = "terraform-locks"
-  # }
 }
 
-provider "aws" {
-  region = var.aws_region
+# ── VPC ──────────────────────────────────────────────────────────────────────
 
-  default_tags {
-    tags = {
-      Project     = "${project.name}"
-      Environment = var.environment
-      ManagedBy   = "CloudForge"
-      CreatedAt   = "${new Date().toISOString()}"
-    }
+resource "aws_vpc" "main" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "\${var.project_name}-\${var.environment}-vpc"
   }
 }
 
-# ── Core Infrastructure Resources ──
-# Add your AWS resources here based on your infrastructure design
-# Example resources:
-#
-# resource "aws_vpc" "main" {
-#   cidr_block           = var.vpc_cidr
-#   enable_dns_hostnames = true
-#   enable_dns_support   = true
-#   tags = {
-#     Name = "\${var.project_name}-vpc"
-#   }
-# }
-#
-# resource "aws_subnet" "public" {
-#   vpc_id                  = aws_vpc.main.id
-#   cidr_block              = var.public_subnet_cidr
-#   availability_zone       = data.aws_availability_zones.available.names[0]
-#   map_public_ip_on_launch = true
-#   tags = {
-#     Name = "\${var.project_name}-public-subnet"
-#   }
-# }
+resource "aws_subnet" "public" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_cidr
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "\${var.project_name}-\${var.environment}-public"
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 `
 }
 
@@ -270,7 +359,6 @@ function generateVariablesTf(): string {
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string
-  default     = "dev"
 
   validation {
     condition     = contains(["dev", "staging", "prod"], var.environment)
@@ -284,7 +372,7 @@ variable "project_name" {
 
   validation {
     condition     = can(regex("^[a-z0-9-]{3,50}$", var.project_name))
-    error_message = "Project name must be 3-50 characters, lowercase alphanumeric and hyphens only."
+    error_message = "Project name must be 3-50 chars, lowercase alphanumeric and hyphens only."
   }
 }
 
@@ -292,6 +380,18 @@ variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
   default     = "10.0.0.0/16"
+}
+
+variable "public_subnet_cidr" {
+  description = "CIDR block for the public subnet"
+  type        = string
+  default     = "10.0.1.0/24"
+}
+
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t3.micro"
 }
 
 variable "tags" {
@@ -303,43 +403,83 @@ variable "tags" {
 }
 
 function generateOutputsTf(): string {
-  return `# ── Infrastructure Outputs ──
-# These outputs expose important resource attributes for external use
+  return `# modules/outputs.tf — expose key resource attributes
 
-# output "vpc_id" {
-#   description = "The ID of the VPC"
-#   value       = aws_vpc.main.id
-# }
+output "vpc_id" {
+  description = "The ID of the VPC"
+  value       = aws_vpc.main.id
+}
 
-# output "public_subnet_ids" {
-#   description = "List of public subnet IDs"
-#   value       = aws_subnet.public[*].id
-# }
+output "public_subnet_id" {
+  description = "The ID of the public subnet"
+  value       = aws_subnet.public.id
+}
 
-# output "instance_public_ips" {
-#   description = "Public IPs of EC2 instances"
-#   value       = aws_instance.app[*].public_ip
-# }
-
-# Uncomment and customize outputs based on your infrastructure
+output "aws_region" {
+  description = "Deployed AWS region"
+  value       = var.aws_region
+}
 `
 }
 
-function generateTfvars(): string {
-  return `# Terraform Variables File
-# Use this file to provide values for variables defined in variables.tf
+function generateEnvTerragruntHcl(env: string, instanceType: string): string {
+  return `# stacks/${env}/terragrunt.hcl — ${env} environment stack
 
-aws_region  = "us-east-1"
-environment = "dev"
-project_name = "my-project"
+include "root" {
+  path   = find_in_parent_folders("terragrunt.hcl")
+  expose = true
+}
 
-vpc_cidr = "10.0.0.0/16"
+include "stack" {
+  path   = find_in_parent_folders("stack.hcl")
+  expose = true
+}
+
+inputs = {
+  environment   = "${env}"
+  instance_type = "${instanceType}"
+  vpc_cidr      = "${env === "prod" ? "10.2.0.0/16" : env === "staging" ? "10.1.0.0/16" : "10.0.0.0/16"}"
+
+  tags = {
+    Environment = "${env}"
+    CostCenter  = "Engineering"
+  }
+}
+`
+}
+
+function generateEnvTfvars(env: string): string {
+  const cidr = env === "prod" ? "10.2.0.0/16" : env === "staging" ? "10.1.0.0/16" : "10.0.0.0/16"
+  const instance = env === "prod" ? "t3.medium" : env === "staging" ? "t3.small" : "t3.micro"
+  return `# stacks/${env}/terraform.tfvars
+
+environment   = "${env}"
+vpc_cidr      = "${cidr}"
+instance_type = "${instance}"
 
 tags = {
+  Environment = "${env}"
   Owner       = "DevTeam"
   CostCenter  = "Engineering"
-  Managed     = "Terraform"
 }
 `
 }
 
+function generateBackendTf(env: string): string {
+  return `# stacks/${env}/backend.tf — remote state (auto-generated by Terragrunt root config)
+# Do not edit manually — managed via root terragrunt.hcl remote_state block.
+
+# Terragrunt will inject the backend configuration at plan/apply time.
+# If running plain Terraform, configure manually:
+#
+# terraform {
+#   backend "s3" {
+#     bucket         = "cloudforge-terraform-state-us-east-1"
+#     key            = "<project>/${env}/terraform.tfstate"
+#     region         = "us-east-1"
+#     encrypt        = true
+#     dynamodb_table = "cloudforge-terraform-locks"
+#   }
+# }
+`
+}

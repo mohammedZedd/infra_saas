@@ -1,40 +1,7 @@
 import { useState } from 'react'
 import AwsResourceModal, { AwsResourceSection, FormField } from './AwsResourceModal'
 import { Input } from '../../ui/Input'
-
-export interface RDSConfig {
-  // Engine Options
-  engine: 'mysql' | 'postgres' | 'mariadb' | 'oracle' | 'sqlserver'
-  engineVersion: string
-
-  // Instance Class
-  instanceClass: string
-
-  // Storage
-  storageType: 'gp2' | 'gp3' | 'io1'
-  allocatedStorage: number
-  iops?: number
-
-  // Networking
-  vpcId: string
-  subnetGroupName: string
-  publiclyAccessible: boolean
-
-  // Security
-  securityGroupIds: string[]
-  encryption: boolean
-  kmsKeyId?: string
-
-  // Backup
-  backupRetentionPeriod: number
-  backupWindow: string
-
-  // Maintenance
-  maintenanceWindow: string
-
-  // Tags
-  tags: Record<string, string>
-}
+import type { RDSConfig } from '../../../types/aws-resources'
 
 interface RdsConfigModalProps {
   isOpen: boolean

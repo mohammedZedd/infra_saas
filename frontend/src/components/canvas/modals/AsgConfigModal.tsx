@@ -2,28 +2,7 @@ import { useState } from 'react'
 import AwsResourceModal, { AwsResourceSection, FormField } from './AwsResourceModal'
 import { Input } from '../../ui/Input'
 import { Button } from '../../ui/Button'
-
-export interface ScalingPolicy {
-  id: string
-  type: string
-  value?: string
-}
-
-export interface AsgConfig {
-  name: string
-  vpcId: string
-  subnets: string[]
-  launchTemplate?: string
-  instanceTypeOverride?: string
-  amiOverride?: string
-  desired: number
-  min: number
-  max: number
-  scalingPolicies: ScalingPolicy[]
-  healthCheckType: string
-  healthCheckGracePeriod: number
-  tags: Record<string,string>
-}
+import type { AsgConfig } from '../../../types/aws-resources'
 
 interface Props {
   isOpen: boolean

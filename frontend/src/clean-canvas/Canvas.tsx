@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react"
+import "@xyflow/react/dist/style.css"
 import {
   ReactFlowProvider,
   ReactFlow,
@@ -131,6 +132,7 @@ function CanvasArea() {
         selectNodesOnDrag={false}
         nodesFocusable={true}
         elementsSelectable={true}
+        elevateNodesOnSelect={false}
         multiSelectionKeyCode="Shift"
         selectionKeyCode="Shift"
         selectionOnDrag={true}

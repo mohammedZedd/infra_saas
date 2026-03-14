@@ -52,7 +52,7 @@ export default function ModalSelector({ node, onClose, onSave }: ModalSelectorPr
             },
           })
         }
-        initialConfig={data.ec2Config as any}
+        initialConfig={data.ec2Config}
       />
     )
   }
@@ -75,7 +75,7 @@ export default function ModalSelector({ node, onClose, onSave }: ModalSelectorPr
             },
           })
         }
-        initialConfig={data.s3Config as any}
+        initialConfig={data.s3Config}
       />
     )
   }
@@ -100,7 +100,7 @@ export default function ModalSelector({ node, onClose, onSave }: ModalSelectorPr
             },
           })
         }
-        initialConfig={data.rdsConfig as any}
+        initialConfig={data.rdsConfig}
       />
     )
   }
@@ -124,7 +124,7 @@ export default function ModalSelector({ node, onClose, onSave }: ModalSelectorPr
             },
           })
         }
-        initialConfig={data.lambdaConfig as any}
+        initialConfig={data.lambdaConfig}
       />
     )
   }
@@ -147,7 +147,7 @@ export default function ModalSelector({ node, onClose, onSave }: ModalSelectorPr
             },
           })
         }
-        initialConfig={data.vpcConfig as any}
+        initialConfig={data.vpcConfig}
       />
     )
   }
@@ -170,7 +170,7 @@ export default function ModalSelector({ node, onClose, onSave }: ModalSelectorPr
             },
           })
         }
-        initialConfig={data.subnetConfig as any}
+        initialConfig={data.subnetConfig}
       />
     )
   }
@@ -195,7 +195,7 @@ export default function ModalSelector({ node, onClose, onSave }: ModalSelectorPr
             },
           })
         }
-        initialConfig={data.asgConfig as any}
+        initialConfig={data.asgConfig}
       />
     )
   }
@@ -219,7 +219,7 @@ export default function ModalSelector({ node, onClose, onSave }: ModalSelectorPr
             },
           })
         }
-        initialConfig={data.elbConfig as any}
+        initialConfig={data.elbConfig}
       />
     )
   }
@@ -242,7 +242,7 @@ export default function ModalSelector({ node, onClose, onSave }: ModalSelectorPr
             },
           })
         }
-        initialConfig={data.securityGroupConfig as any}
+        initialConfig={data.securityGroupConfig}
       />
     )
   }

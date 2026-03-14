@@ -211,7 +211,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       let nodeType = "awsNode"
       if (type === "vpc") nodeType = "vpcNode"
       if (type === "subnet") nodeType = "subnetNode"
-      const isContainer = type === "vpc" || type === "subnet"
       
       // Determine base dimensions
       const baseDimensions = 
@@ -233,7 +232,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
         id,
         type: nodeType,
         position,
-        zIndex: isContainer ? 0 : 10,
+        zIndex: type === "vpc" ? 0 : type === "subnet" ? 1 : 10,
         data: {
           type: config.type,
           label: config.label,

@@ -3,7 +3,12 @@ import useEditorStore from "../../stores/useEditorStore"
 import { CLOUD_PROVIDERS } from "../../types/cloud"
 import WorkspaceSelector from "./WorkspaceSelector"
 
-export default function EditorNavbar() {
+interface EditorNavbarProps {
+  onSave?: () => void
+  isSaving?: boolean
+}
+
+export default function EditorNavbar({ onSave, isSaving = false }: EditorNavbarProps) {
   const { projectId } = useParams()
   const nodes = useEditorStore((s) => s.nodes)
   const cloudProvider = useEditorStore((s) => s.cloudProvider)
@@ -14,9 +19,9 @@ export default function EditorNavbar() {
     <div className="h-12 flex items-center justify-between border-b border-gray-200 bg-white px-4 gap-2">
       <div className="flex min-w-0 items-center gap-3">
         <Link
-          to="/dashboard"
+          to={`/projects/${projectId}`}
           className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
-          aria-label="Back to dashboard"
+          aria-label="Back to project"
         >
           ←
         </Link>
@@ -51,8 +56,13 @@ export default function EditorNavbar() {
       </div>
 
       <div className="flex items-center gap-2">
-        <button className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-          Save
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={!onSave || isSaving}
+          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSaving ? "Saving..." : "Save"}
         </button>
         <button className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-indigo-700">
           Export HCL

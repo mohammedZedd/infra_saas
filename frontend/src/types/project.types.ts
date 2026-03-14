@@ -26,6 +26,7 @@ export interface TerraformRun {
   planSummary?: TerriformPlanSummary
   errorMessage?: string
   logUrl?: string
+  logs?: string
 }
 
 /** Full project object returned by the API. */
@@ -34,9 +35,16 @@ export interface Project {
   name: string
   description: string
   region: string
+  environment?: string
   status: ProjectStatus
   node_count: number
   estimated_cost: number
+  architecture_data?: {
+    nodes?: unknown[]
+    edges?: unknown[]
+    viewport?: { x: number; y: number; zoom: number }
+    cloudProvider?: string
+  } | null
   created_at: string
   updated_at: string
   last_deployed_at: string | null
@@ -56,6 +64,14 @@ export interface UpdateProjectRequest {
   name?: string
   description?: string
   region?: string
+  environment?: string
+  status?: ProjectStatus
+  architecture_data?: {
+    nodes?: unknown[]
+    edges?: unknown[]
+    viewport?: { x: number; y: number; zoom: number }
+    cloudProvider?: string
+  } | null
 }
 
 /** Aggregated statistics shown on the dashboard. */
@@ -65,3 +81,20 @@ export interface ProjectStats {
   total_estimated_cost: number
 }
 
+/** Tab identifiers for Project Detail page */
+export type ProjectTabId = 'overview' | 'runs' | 'code' | 'variables' | 'state' | 'security' | 'git' | 'settings'
+
+/** Tab configuration */
+export interface ProjectTab {
+  id: ProjectTabId
+  label: string
+  emoji: string
+}
+
+/** Last run information for a project */
+export interface ProjectLastRun {
+  status: TerraformRunStatus
+  command: TerraformCommand
+  duration: string
+  at: string
+}

@@ -1,10 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { Project } from "./projectData"
-import useGitStore from "../../stores/useGitStore"
-import GitConnectModal from "./GitConnectModal"
-import GitPushModal from "./GitPushModal"
 import { CodeEditor } from "../ui/CodeEditor"
+import GitConnectModal from "./GitConnectModal"
 
 interface Props {
   project: Project
@@ -19,59 +17,64 @@ interface FileItem {
 }
 
 function buildFileTree(project: Project): FileItem[] {
+  const slug = project.name.toLowerCase().replace(/\s+/g, "-")
   return [
     {
-      name: project.name.toLowerCase().replace(/\s+/g, "-"),
+      name: slug,
       type: "folder",
       icon: "📁",
       children: [
         {
-          name: ".terraform",
+          name: "modules",
           type: "folder",
-          icon: "📂",
+          icon: "📁",
           children: [
             {
-              name: "providers",
-              type: "folder",
-              icon: "📂",
-              children: [
-                {
-                  name: "hashicorp",
-                  type: "folder",
-                  icon: "📂",
-                  children: [{ name: "aws", type: "folder", icon: "📂", children: [] }],
-                },
-              ],
+              name: "variables.tf",
+              type: "file",
+              icon: "📄",
+              content: `variable "aws_region" {\n  description = "AWS region"\n  type        = string\n  default     = "us-east-1"\n}\n\nvariable "environment" {\n  description = "Environment name"\n  type        = string\n  default     = "production"\n}\n\nvariable "instance_type" {\n  description = "EC2 instance type"\n  type        = string\n  default     = "t3.small"\n}\n\nvariable "db_password" {\n  description = "Database password"\n  type        = string\n  sensitive   = true\n}`,
             },
-            { name: ".terraform.lock.hcl", type: "file", icon: "🔒", content: '# This file is maintained automatically by "terraform init".' },
+            {
+              name: "outputs.tf",
+              type: "file",
+              icon: "📄",
+              content: `output "vpc_id" {\n  description = "The ID of the VPC"\n  value       = aws_vpc.main.id\n}\n\noutput "instance_public_ip" {\n  description = "Public IP of the web instance"\n  value       = aws_instance.web.public_ip\n}\n\noutput "db_endpoint" {\n  description = "Database endpoint"\n  value       = aws_db_instance.postgres.endpoint\n  sensitive   = false\n}`,
+            },
           ],
         },
-        { name: "main.tf", type: "file", icon: "📄", content: project.terraformCode },
         {
-          name: "variables.tf",
-          type: "file",
-          icon: "📄",
-          content: `variable "aws_region" {\n  description = "AWS region"\n  type        = string\n  default     = "us-east-1"\n}\n\nvariable "environment" {\n  description = "Environment name"\n  type        = string\n  default     = "production"\n}\n\nvariable "instance_type" {\n  description = "EC2 instance type"\n  type        = string\n  default     = "t3.small"\n}\n\nvariable "db_password" {\n  description = "Database password"\n  type        = string\n  sensitive   = true\n}`,
+          name: "services",
+          type: "folder",
+          icon: "📁",
+          children: [
+            { name: "main.tf", type: "file", icon: "📄", content: project.terraformCode },
+          ],
         },
         {
-          name: "outputs.tf",
-          type: "file",
-          icon: "📄",
-          content: `output "vpc_id" {\n  description = "The ID of the VPC"\n  value       = aws_vpc.main.id\n}\n\noutput "instance_public_ip" {\n  description = "Public IP of the web instance"\n  value       = aws_instance.web.public_ip\n}\n\noutput "db_endpoint" {\n  description = "Database endpoint"\n  value       = aws_db_instance.postgres.endpoint\n  sensitive   = false\n}`,
-        },
-        { name: "terraform.tfvars", type: "file", icon: "⚙️", content: `aws_region    = "us-east-1"\nenvironment   = "production"\ninstance_type = "t3.small"` },
-        {
-          name: "backend.tf",
-          type: "file",
-          icon: "📄",
-          content: `terraform {\n  backend "s3" {\n    bucket = "infradesigner-tfstate"\n    key    = "${project.name.toLowerCase().replace(/\s+/g, "-")}/terraform.tfstate"\n    region = "us-east-1"\n  }\n}`,
-        },
-        { name: ".gitignore", type: "file", icon: "📝", content: `.terraform/\n*.tfstate\n*.tfstate.*\n*.tfvars\n.terraform.lock.hcl` },
-        {
-          name: "README.md",
-          type: "file",
-          icon: "📖",
-          content: `# ${project.name}\n\n${project.description}\n\n## Usage\n\n\`\`\`bash\nterraform init\nterraform plan\nterraform apply\n\`\`\`\n\n## Requirements\n\n- Terraform >= 1.6.0\n- AWS Provider ~> 5.0`,
+          name: "stacks",
+          type: "folder",
+          icon: "📁",
+          children: [
+            {
+              name: "backend.tf",
+              type: "file",
+              icon: "📄",
+              content: `terraform {\n  backend "s3" {\n    bucket = "infradesigner-tfstate"\n    key    = "${slug}/terraform.tfstate"\n    region = "us-east-1"\n  }\n}`,
+            },
+            {
+              name: "terraform.tfvars",
+              type: "file",
+              icon: "⚙️",
+              content: `aws_region    = "us-east-1"\nenvironment   = "production"\ninstance_type = "t3.small"`,
+            },
+            {
+              name: ".gitignore",
+              type: "file",
+              icon: "📝",
+              content: `.terraform/\n*.tfstate\n*.tfstate.*\n*.tfvars\n.terraform.lock.hcl`,
+            },
+          ],
         },
       ],
     },
@@ -83,13 +86,13 @@ export default function ProjectCode({ project }: Props) {
   const fileTree = buildFileTree(project)
 
   const [selectedFile, setSelectedFile] = useState<string>("main.tf")
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set([fileTree[0].name, ".terraform"]))
-
-  const repository = useGitStore((s) => s.repository)
-  const currentBranch = useGitStore((s) => s.currentBranch)
-  const lastPushedAt = useGitStore((s) => s.lastPushedAt)
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set([fileTree[0].name, "modules", "services", "stacks"]))
   const [showConnectModal, setShowConnectModal] = useState(false)
-  const [showPushModal, setShowPushModal] = useState(false)
+
+  // Local state for Git connection (not using store for now)
+  const connected = false
+  const currentBranch = "main"
+  const lastPulledAt = null
 
   const findFileContent = (items: FileItem[], name: string): string | null => {
     for (const item of items) {
@@ -112,7 +115,6 @@ export default function ProjectCode({ project }: Props) {
   }
 
   const currentContent = findFileContent(fileTree, selectedFile) || "// No content"
-  const allFiles = getAllFileNames(fileTree)
 
   const toggleFolder = (name: string) => {
     setExpandedFolders((prev) => {
@@ -204,12 +206,12 @@ export default function ProjectCode({ project }: Props) {
 
         <div style={{ flex: 1 }} />
 
-        {repository && (
+        {connected && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginRight: 12 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#22C55E" }} />
             <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{currentBranch}</span>
-            {lastPushedAt && (
-              <span style={{ fontSize: 10, color: "#64748B" }}>• pushed {formatPushedAt(lastPushedAt)}</span>
+            {lastPulledAt && (
+              <span style={{ fontSize: 10, color: "#64748B" }}>• pulled {formatPushedAt(lastPulledAt)}</span>
             )}
           </div>
         )}
@@ -233,8 +235,8 @@ export default function ProjectCode({ project }: Props) {
             ⬇️ Download
           </button>
 
-          {repository ? (
-            <button onClick={() => setShowPushModal(true)} style={{ padding: "4px 10px", borderRadius: 6, border: "none", backgroundColor: "#22C55E", color: "white", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+          {connected ? (
+            <button disabled style={{ padding: "4px 10px", borderRadius: 6, border: "none", backgroundColor: "#22C55E", color: "white", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, opacity: 0.5 }}>
               🚀 Push to Git
             </button>
           ) : (
@@ -286,9 +288,9 @@ export default function ProjectCode({ project }: Props) {
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>{currentContent.split("\n").length} lines</span>
         </div>
         <div style={{ display: "flex", gap: 16 }}>
-          {repository && (
+          {connected && (
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", gap: 4 }}>
-              🐙 {repository.fullName} • {currentBranch}
+              🐙 {project.name} • {currentBranch}
             </span>
           )}
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>Terraform v1.6.4</span>
@@ -297,7 +299,6 @@ export default function ProjectCode({ project }: Props) {
       </div>
 
       <GitConnectModal isOpen={showConnectModal} onClose={() => setShowConnectModal(false)} />
-      <GitPushModal isOpen={showPushModal} onClose={() => setShowPushModal(false)} files={allFiles} />
     </div>
   )
 }

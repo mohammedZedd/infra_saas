@@ -36,129 +36,77 @@ export default function SubnetNode({ id, data, selected }: NodeProps) {
   }
 
   return (
-    <>
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
       <NodeResizer
-        nodeId={id}
         isVisible={selected}
         minWidth={200}
         minHeight={150}
-        lineStyle={{
-          borderWidth: 0,
-          background: "transparent",
-        }}
         handleStyle={{
-          width: "10px",
-          height: "10px",
-          backgroundColor: "transparent",
-          border: "none",
-          borderRadius: 0,
-          boxShadow: "none",
-          opacity: 0,
+          width: "8px",
+          height: "8px",
+          background: color,
+          border: "2px solid white",
+          borderRadius: "50%",
+          zIndex: 9999,
         }}
+        lineStyle={{ border: "1px dashed #3B82F6" }}
       />
 
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ width: 8, height: 8, backgroundColor: color, border: "2px solid white", borderRadius: "50%", pointerEvents: "all" }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{ width: 8, height: 8, backgroundColor: color, border: "2px solid white", borderRadius: "50%", pointerEvents: "all" }}
+      />
+
+      {/* Header — absolute, always on top, always clickable */}
       <div
-        onClick={(e) => {
-          e.stopPropagation()
-          selectNode(id)
-        }}
+        className="subnet-header"
+        onClick={(e) => { e.stopPropagation(); selectNode(id) }}
         style={{
-          width: "100%",
-          height: "100%",
-          border: `2px ${selected ? "solid" : "dashed"} ${color}`,
-          borderRadius: "10px",
-          backgroundColor: "rgba(59, 130, 246, 0.03)",
-          position: "relative",
+          position: "absolute",
+          top: 0, left: 0, right: 0,
+          zIndex: 10,
+          pointerEvents: "all",
+          cursor: "pointer",
           display: "flex",
-          flexDirection: "column",
-          overflow: "visible",
-          boxSizing: "border-box",
-          // Body is always transparent to pointer events.
-          // The header below overrides with pointerEvents: "all" so it stays clickable.
-          // This ensures edges and child nodes inside the Subnet are always reachable.
-          pointerEvents: "none",
-          cursor: "default",
+          alignItems: "center",
+          gap: "6px",
+          padding: "8px 12px",
+          borderBottom: "1px dashed #93C5FD",
+          backgroundColor: "rgba(59, 130, 246, 0.06)",
+          borderRadius: "8px 8px 0 0",
         }}
       >
-        {/* Handles always interactive regardless of selection state */}
-        <Handle
-          type="target"
-          position={Position.Left}
-          style={{
-            width: "8px",
-            height: "8px",
-            backgroundColor: color,
-            border: "2px solid white",
-            boxShadow: "0 0 0 1px #E5E7EB",
-            pointerEvents: "all",
-          }}
-        />
-
-        {/* Header — always captures clicks even when node body is transparent to events */}
-        <div
-          className="subnet-header"
-          onClick={(e) => {
-            e.stopPropagation()
-            selectNode(id)
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "8px 12px",
-            borderBottom: "1px dashed #93C5FD",
-            backgroundColor: "rgba(59, 130, 246, 0.06)",
-            borderRadius: "8px 8px 0 0",
-            cursor: "pointer",
-            flexShrink: 0,
-            // Override parent's pointerEvents: none so header is always clickable
-            pointerEvents: "all",
-          }}
-        >
-          <AwsIcon type="subnet" size={16} />
-          <span
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              color: "#2563EB",
-            }}
-          >
-            Subnet
-          </span>
-          <span style={{ fontSize: "10px", color: "#9CA3AF" }}>
-            {properties.cidr_block || "10.0.1.0/24"}
-          </span>
-          <span
-            style={{
-              fontSize: "9px",
-              fontWeight: 500,
-              color: "#9CA3AF",
-              backgroundColor: "#F3F4F6",
-              padding: "1px 5px",
-              borderRadius: "3px",
-              marginLeft: "auto",
-            }}
-          >
-            {properties.availability_zone || "us-east-1a"}
-          </span>
-        </div>
-
-        {/* Body — inherits parent pointerEvents (none when selected → clicks reach EC2 inside) */}
-        <div style={{ flex: 1, padding: "12px" }} />
-
-        <Handle
-          type="source"
-          position={Position.Right}
-          style={{
-            width: "8px",
-            height: "8px",
-            backgroundColor: color,
-            border: "2px solid white",
-            boxShadow: "0 0 0 1px #E5E7EB",
-            pointerEvents: "all",
-          }}
-        />
+        <AwsIcon type="subnet" size={16} />
+        <span style={{ fontSize: "11px", fontWeight: 600, color: "#2563EB" }}>
+          Subnet
+        </span>
+        <span style={{ fontSize: "10px", color: "#9CA3AF" }}>
+          {properties.cidr_block || "10.0.1.0/24"}
+        </span>
+        <span style={{ fontSize: "9px", fontWeight: 500, color: "#9CA3AF", backgroundColor: "#F3F4F6", padding: "1px 5px", borderRadius: "3px", marginLeft: "auto" }}>
+          {properties.availability_zone || "us-east-1a"}
+        </span>
       </div>
-    </>
+
+      {/* Body — visual overlay only; pointer-events:none so edges/nodes inside always get mouse events */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "10px",
+          border: selected ? `2px solid ${color}` : `2px dashed ${color}`,
+          backgroundColor: selected ? "rgba(59,130,246,0.05)" : "rgba(59,130,246,0.03)",
+          boxShadow: selected ? "0 0 0 3px rgba(59,130,246,0.2)" : undefined,
+          transition: "border 0.15s ease, box-shadow 0.15s ease",
+          pointerEvents: "none",
+        }}
+      />
+    </div>
   )
 }

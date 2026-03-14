@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react"
-import { Bell, ChevronDown, CreditCard, LogOut, Menu, User } from "lucide-react"
+import { ChevronDown, CreditCard, LogOut, Menu, User } from "lucide-react"
+import { NotificationBell } from "./NotificationBell"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "../../utils/cn"
-import useAuthStore from "../../stores/useAuthStore"
 import useUIStore from "../../stores/useUIStore"
+import useAuthStore from "../../stores/useAuthStore"
 import { SearchInput } from "../ui/SearchInput"
 
 const LABELS: Record<string, string> = {
@@ -36,12 +37,13 @@ function Avatar({ name }: { name: string }) {
 
 export function Header() {
   const user = useAuthStore((s) => s.user)
+  const isLoading = useAuthStore((s) => s.isLoading)
   const logout = useAuthStore((s) => s.logout)
+  const navigate = useNavigate()
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
   const [search, setSearch] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const navigate = useNavigate()
   const breadcrumbs = useBreadcrumbs()
 
   useEffect(() => {
@@ -53,6 +55,15 @@ export function Header() {
     document.addEventListener("mousedown", handle)
     return () => document.removeEventListener("mousedown", handle)
   }, [])
+
+  const displayName = user?.name?.trim() || "User"
+  const displayEmail = user?.email?.trim() || "No email"
+
+  const handleSignOut = () => {
+    logout()
+    setMenuOpen(false)
+    navigate("/login")
+  }
 
   return (
     <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6">
@@ -74,9 +85,7 @@ export function Header() {
       <div className="flex items-center gap-3">
         <SearchInput value={search} onChange={setSearch} placeholder="Search" className="hidden w-full max-w-md md:block" label="Search" />
 
-        <button className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600" aria-label="Notifications">
-          <Bell size={18} />
-        </button>
+        <NotificationBell />
 
         <div className="relative" ref={menuRef}>
           <button
@@ -85,8 +94,12 @@ export function Header() {
             aria-haspopup="menu"
             aria-expanded={menuOpen}
           >
-            <Avatar name={user?.name ?? "User"} />
-            <span className="hidden max-w-[120px] truncate text-sm font-medium text-gray-700 md:block">{user?.name ?? "User"}</span>
+            {isLoading && !user ? (
+              <span className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
+            ) : (
+              <Avatar name={displayName} />
+            )}
+            <span className="hidden max-w-[120px] truncate text-sm font-medium text-gray-700 md:block">{displayName}</span>
             <ChevronDown size={14} className="hidden text-gray-400 md:block" />
           </button>
 
@@ -102,10 +115,7 @@ export function Header() {
               </Link>
               <div className="my-1 border-t border-gray-100" />
               <button
-                onClick={() => {
-                  logout()
-                  navigate("/login")
-                }}
+                onClick={handleSignOut}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50"
               >
                 <LogOut size={15} />
@@ -114,6 +124,7 @@ export function Header() {
             </div>
           )}
         </div>
+        <span className="hidden text-xs text-gray-500 md:block">{displayEmail}</span>
       </div>
     </header>
   )

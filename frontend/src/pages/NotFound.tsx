@@ -1,11 +1,10 @@
 import { useNavigate } from "react-router-dom"
 import { ArrowLeft, Home } from "lucide-react"
 import { Button } from "../components/ui/Button"
-import useAuthStore from "../stores/useAuthStore"
+// useAuthStore disabled — UI prototype mode
 
 export default function NotFound() {
   const navigate = useNavigate()
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
@@ -17,7 +16,7 @@ export default function NotFound() {
         <Button variant="outline" leftIcon={ArrowLeft} onClick={() => navigate(-1)}>
           Go back
         </Button>
-        <Button leftIcon={Home} onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")}>{isAuthenticated ? "Dashboard" : "Home"}</Button>
+        <Button leftIcon={Home} onClick={() => navigate("/dashboard")}>Dashboard</Button>
       </div>
     </div>
   )

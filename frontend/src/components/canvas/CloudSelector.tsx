@@ -10,8 +10,7 @@ export default function CloudSelector({ onSelect }: CloudSelectorProps) {
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        backdropFilter: "blur(8px)",
+        backgroundColor: "white",
         zIndex: 100,
         display: "flex",
         alignItems: "center",

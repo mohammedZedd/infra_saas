@@ -1,3 +1,15 @@
+import type {
+  EC2Config,
+  SecurityGroupConfig,
+  VpcConfig,
+  SubnetConfig,
+  S3Config,
+  RDSConfig,
+  LambdaConfig,
+  AsgConfig,
+  ElbConfig,
+} from './aws-resources'
+
 export type AwsCategory =
   | "compute"
   | "storage"
@@ -170,7 +182,16 @@ export interface AwsNodeData extends Record<string, unknown> {
   category: AwsCategory
   provider?: string
   properties: Record<string, unknown>
-  ec2Config?: Record<string, unknown>
+  // Specific AWS resource configurations
+  ec2Config?: Partial<EC2Config>
+  s3Config?: Partial<S3Config>
+  rdsConfig?: Partial<RDSConfig>
+  lambdaConfig?: Partial<LambdaConfig>
+  asgConfig?: Partial<AsgConfig>
+  elbConfig?: Partial<ElbConfig>
+  vpcConfig?: Partial<VpcConfig>
+  subnetConfig?: Partial<SubnetConfig>
+  securityGroupConfig?: Partial<SecurityGroupConfig>
   // Hierarchy tracking
   parentId?: string | null
   isLocked?: boolean

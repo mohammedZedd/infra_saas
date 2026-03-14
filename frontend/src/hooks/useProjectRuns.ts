@@ -8,7 +8,7 @@ import {
   triggerTerraformDestroy,
   cancelTerraformRun,
   retryTerraformRun,
-} from "../services/api"
+} from "@/lib/api"
 import toast from "react-hot-toast"
 
 export interface UseProjectRunsState {

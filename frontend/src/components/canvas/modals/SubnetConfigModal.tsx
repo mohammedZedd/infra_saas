@@ -2,15 +2,7 @@ import { useState } from 'react'
 import AwsResourceModal, { AwsResourceSection, FormField } from './AwsResourceModal'
 import { Input } from '../../ui/Input'
 import { Button } from '../../ui/Button'
-
-export interface SubnetConfig {
-  name: string
-  vpcId: string
-  cidr: string
-  availabilityZone: string
-  autoAssignPublicIp: boolean
-  tags: Record<string,string>
-}
+import type { SubnetConfig } from '../../../types/aws-resources'
 
 interface Props {
   isOpen: boolean
